@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Bell,
   Home,
   LineChart,
   Package,
@@ -8,18 +7,15 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState } from "react";
 
 export function Sidebar() {
+  const [selectedItem, setSelectedItem] = useState("Dashboard");
+
+  const handleItemClick = (itemName: string) => {
+    setSelectedItem(itemName);
+  };
+
   return (
     <div className="hidden border-r bg-muted/40 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
@@ -32,36 +28,61 @@ export function Sidebar() {
         <div className="flex-1">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              href="/"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Dashboard"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Dashboard")}
             >
               <Home className="h-12 w-4" />
               Dashboard
             </Link>
             <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              href="/event"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Event"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Event")}
             >
-              <ShoppingCart className="h-8 w-4" />
-              Orders
+              <ShoppingCart className="h-12 w-4" />
+              Event
             </Link>
             <Link
               href="#"
-              className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Template"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Template")}
             >
               <Package className="h-12 w-4" />
-              Products{" "}
+              Template
             </Link>
             <Link
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Provider"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Provider")}
             >
               <Users className="h-12 w-4" />
-              Customers
+              Provider
             </Link>
             <Link
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Analytics"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Analytics")}
             >
               <LineChart className="h-12 w-4" />
               Analytics
