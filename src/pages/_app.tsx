@@ -18,12 +18,6 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
 
   return getLayout(
     <HeadWrapper>
-      <ToastContainer
-        className={"font-Metropolis"}
-        pauseOnFocusLoss={false}
-        autoClose={500}
-        hideProgressBar={true}
-      />
       <Component {...pageProps} />
     </HeadWrapper>
   );

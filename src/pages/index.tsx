@@ -1,5 +1,4 @@
-import { ReactElement, ReactNode } from "react";
-import { GetServerSidePropsContext } from "next";
+import { ReactElement } from "react";
 import Layout from "@/components/layouts/Layout";
 import Dashboard from "@/components/Dashboard";
 

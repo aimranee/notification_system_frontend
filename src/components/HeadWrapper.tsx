@@ -1,3 +1,5 @@
+import Head from "next/head";
+
 export default function HeadWrapper({
   children,
 }: {
@@ -5,12 +7,10 @@ export default function HeadWrapper({
 }) {
   return (
     <>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <title>Adria | Notification System</title>
-        </head>
-        {children}
-      </html>
+      <Head>
+        <title>Adria | Notification System</title>
+      </Head>
+      {children}
     </>
   );
 }

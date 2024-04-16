@@ -1,8 +1,8 @@
 import React from "react";
-import { Inter as FontSans } from "next/font/google";
-import { cn } from "@/lib/utils";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { Inter as FontSans } from "next/font/google";
+import { cn } from "@/lib/utils";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -12,7 +12,7 @@ const fontSans = FontSans({
 function Layout({ children }: any) {
   return (
     <>
-      <body
+      <div
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
@@ -27,7 +27,7 @@ function Layout({ children }: any) {
             </main>
           </div>
         </div>
-      </body>
+      </div>
     </>
   );
 }
