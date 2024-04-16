@@ -1,7 +1,7 @@
 import React, { ReactElement } from "react";
 import Layout from "@/components/layouts/Layout";
 import EventCreate from "@/components/event/EventCreate";
-import EventList from "@/components/event/EventList";
+import { EventList } from "@/components/event/EventList";
 
 const Event = ({}) => {
   return (

@@ -1,10 +1,10 @@
 type CreateEvent = {
   name: string;
-  description: string;
+  editable: boolean;
 };
 
 type EventResponse = {
-  id: number;
-  editable: boolean;
+  id: string;
   name: string;
+  editable: boolean;
 };

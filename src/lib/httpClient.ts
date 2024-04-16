@@ -38,7 +38,6 @@ class HttpClient {
 
   constructor(baseUrl = "", timeout = 20000) {
     this.axiosInstance = axios.create({
-      // withCredentials: true,
       baseURL: baseUrl,
       timeout,
       headers: {
@@ -54,9 +53,6 @@ class HttpClient {
     return this.axiosInstance
       .request(config)
       .then((response) => {
-        // console.log("Response data:");
-        // console.log(JSON.stringify(response.data, null, 2));
-
         return {
           status: response.status,
           data: response.data,
