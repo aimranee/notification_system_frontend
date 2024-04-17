@@ -64,7 +64,7 @@ export function Sidebar() {
               Template
             </Link>
             <Link
-              href="#"
+              href="/provider"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                 selectedItem === "Provider"
                   ? "text-primary"
