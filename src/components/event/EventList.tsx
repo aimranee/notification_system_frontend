@@ -36,6 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import EventCreate from "./EventCreate";
+import EventDelete from "./EventDelete";
 
 export const columns: ColumnDef<EventResponse>[] = [
   {
@@ -75,7 +77,7 @@ export const columns: ColumnDef<EventResponse>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
+    cell: ({ row }) => <div className="upperCase">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "editable",
@@ -93,25 +95,22 @@ export const columns: ColumnDef<EventResponse>[] = [
       const event = row.original;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(event.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View event details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <EventCreate IsEdit={true} EditEventDetails={event} />
+              <DropdownMenuSeparator />
+              <EventDelete DeleteEventId={event.id} />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       );
     },
   },
