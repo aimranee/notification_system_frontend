@@ -41,7 +41,6 @@ class HttpClient {
       baseURL: baseUrl,
       timeout,
       headers: {
-        Accept: "application/json",
         "Content-Type": "application/json",
       },
     });
@@ -69,6 +68,18 @@ class HttpClient {
 
   async get<TData = any>(url: string, config: HttpClientRequest = {}) {
     return this.request<TData>({ method: "GET", url, ...config });
+  }
+
+  async post<TData = any>(url: string, config: HttpClientRequest = {}) {
+    return this.request<TData>({ method: "POST", url, ...config });
+  }
+
+  async put<TData = any>(url: string, config: HttpClientRequest = {}) {
+    return this.request<TData>({ method: "PUT", url, ...config });
+  }
+
+  async delete<TData = any>(url: string, config: HttpClientRequest = {}) {
+    return this.request<TData>({ method: "DELETE", url, ...config });
   }
 }
 

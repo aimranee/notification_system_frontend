@@ -1,7 +1,5 @@
 import HttpClient from "./httpClient";
 
-let signoutTriggered = false;
-
 class ApiClient {
   private httpClient: HttpClient;
 
@@ -9,10 +7,26 @@ class ApiClient {
     this.httpClient = new HttpClient(baseUrl, timeout);
   }
 
-  async get(url: string): Promise<any> {
-    return this.httpClient.get(url).then((response: any) => {
-      console.log("res 2 : " + response.data);
+  async post(url: string, Request: any): Promise<any> {
+    return this.httpClient.post(url, Request).then((response) => {
+      return response;
+    });
+  }
 
+  async get(url: string): Promise<any> {
+    return this.httpClient.get(url).then((response) => {
+      return response;
+    });
+  }
+
+  async put(url: string, Request: any): Promise<any> {
+    return this.httpClient.put(url, Request).then((response) => {
+      return response;
+    });
+  }
+
+  async delete(url: string, Request?: any): Promise<any> {
+    return this.httpClient.delete(url, Request).then((response) => {
       return response;
     });
   }
