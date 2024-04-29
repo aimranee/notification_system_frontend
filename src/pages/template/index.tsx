@@ -44,8 +44,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import EmailTemplate from "@/components/emailTemplate";
-import ProviderService from "@/services/providerService";
-import TemplateList from "@/components/template/TemplateEmailList copy";
+import ProviderService from "@/services/EmailproviderService";
+import TemplateList from "@/components/template/TemplateList";
 
 const Template = () => {
   const [isShowTemplateEditor, setIsShowTemplateEditor] = useState(false);
@@ -72,7 +72,7 @@ const Template = () => {
   );
 
   const { data: providersResp } = useQuery(["getAllProviders"], () =>
-    providerService.getAllProviders()
+    providerService.getAllEmailProviders()
   );
 
   const { mutate: createTemplate } = useMutation(
