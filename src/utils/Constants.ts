@@ -4,19 +4,15 @@ export const USER_ROLE = {
   DEVELOPER: "dev",
 };
 
-export const ProviderType = {
+export const ProviderName = {
   TWILIO: "twilio",
   VONAGE: "vonage",
   SMTP: "smtp",
-  //   FIREBASE: 'fcm',
-  //   WEBHOOK: 'webhook',
 };
 
 export const NotificationType = {
   EMAIL: "email",
   SMS: "sms",
-  //   PUSH: 'push',
-  //   WEBHOOK: 'webhook',
 };
 
 export const SMS_Policy = [
