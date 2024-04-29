@@ -1,6 +1,7 @@
 import React, { ReactElement } from "react";
 import Layout from "@/components/layouts/Layout";
-import { ProviderList } from "@/components/provider/ProviderList";
+import ProviderList from "@/components/provider/ProviderList";
+import ProviderCreate from "@/components/provider/ProviderCreate";
 
 const Provider = ({}) => {
   return (
@@ -9,7 +10,7 @@ const Provider = ({}) => {
         <div className="w-full flex-1">
           <h1 className="text-lg font-semibold md:text-2xl">Providers</h1>
         </div>
-        {/* <ProviderCreate /> */}
+        <ProviderCreate />
       </div>
       <div
         className="flex flex-col rounded-lg border border-dashed shadow-sm p-4"
