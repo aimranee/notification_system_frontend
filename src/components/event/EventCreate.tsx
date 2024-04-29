@@ -196,18 +196,20 @@ export default function EventCreate({
                 Close
               </Button>
             </DialogClose>
-            <Button
-              type="submit"
-              onClick={(e) => {
-                if (IsEdit) {
-                  handleEditEvent(e);
-                } else {
-                  handleCreateEvent(e);
-                }
-              }}
-            >
-              {IsEdit ? "Update" : "Create"}
-            </Button>
+            <DialogClose asChild>
+              <Button
+                type="submit"
+                onClick={(e) => {
+                  if (IsEdit) {
+                    handleEditEvent(e);
+                  } else {
+                    handleCreateEvent(e);
+                  }
+                }}
+              >
+                {IsEdit ? "Update" : "Create"}
+              </Button>
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
