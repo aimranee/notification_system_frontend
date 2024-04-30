@@ -31,7 +31,7 @@ class TemplateService {
   async createTemplate(
     TemplateInput: CreateTemplate
   ): Promise<TemplateResponse> {
-    if (TemplateInput.type === "email") {
+    if (TemplateInput.event?.notificationType === "email") {
       return this.apiClient
         .post("/saveEmail", { data: TemplateInput })
         .then((response) => {

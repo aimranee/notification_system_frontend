@@ -80,6 +80,13 @@ export const columns: ColumnDef<EventResponse>[] = [
     cell: ({ row }) => <div className="upperCase">{row.getValue("name")}</div>,
   },
   {
+    accessorKey: "notificationType",
+    header: "Notification Type",
+    cell: ({ row }) => (
+      <div className="upperCase">{row.getValue("notificationType")}</div>
+    ),
+  },
+  {
     accessorKey: "editable",
     header: "Editable",
     cell: ({ row }) => (

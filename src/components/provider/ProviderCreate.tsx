@@ -302,7 +302,7 @@ export default function ProviderCreate({
                     value={notificationType}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select tye of Notification" />
+                      <SelectValue placeholder="Select type of Notification" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>

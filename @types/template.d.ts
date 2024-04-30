@@ -1,11 +1,10 @@
 type CreateTemplate = {
-  type: string;
   description?: string;
   message?: string;
   subject?: string;
   emailMarkup?: string;
   emailRenderedHtml?: string;
-  event?: object;
+  event?: EventResponse;
   emailProvider?: object;
   // active?: boolean;
   // title?: string;
@@ -22,7 +21,7 @@ type TemplateResponse = {
   id: string;
   CreatedDate: string;
   UpdatedDate: string;
-  type: string;
+  notificationType: string;
   description?: string;
   message?: string;
   subject?: string;

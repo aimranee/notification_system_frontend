@@ -21,6 +21,26 @@ import { useMutation, useQueryClient } from "react-query";
 import EventService from "@/services/eventService";
 import { toast } from "react-toastify";
 import { Checkbox } from "../ui/checkbox";
+import { NotificationType } from "@/utils/Constants";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 export default function EventCreate({
   IsEdit = false,
@@ -34,9 +54,11 @@ export default function EventCreate({
   const [nameError, setNameError] = useState("");
   const [variableError, setVariableError] = useState("");
   const [name, setName] = useState("");
+  const [notificationType, setNotificationType] = useState("");
   const [id, setId] = useState("");
   const [editable, setEditable] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const form = useForm();
 
   useEffect(() => {
     if (IsEdit && EditEventDetails != undefined) {
@@ -44,6 +66,7 @@ export default function EventCreate({
       setEditable(EditEventDetails?.editable);
       setIsChecked(EditEventDetails?.editable);
       setId(EditEventDetails?.id);
+      setNotificationType(EditEventDetails?.notificationType);
     }
   }, [IsEdit]);
 
@@ -52,6 +75,7 @@ export default function EventCreate({
     setEditable(false);
     setNameError("");
     setVariableError("");
+    setNotificationType("");
     setIsChecked(false);
   };
 
@@ -60,19 +84,18 @@ export default function EventCreate({
     return regexp.test(name);
   }
 
-  function handleCreateEvent(e: FormEvent<HTMLButtonElement>) {
+  function handleCreateEvent(values: any) {
     if (!isValidName(name)) {
       setNameError(
         "Please enter a valid app name. Use letters, numbers, underscores or hyphens"
       );
-      e.preventDefault();
       return;
     }
-    e.preventDefault();
 
     let event = {
       name,
       editable,
+      notificationType,
     };
     createEvent(event, {
       onError: (err: any) => {
@@ -86,20 +109,19 @@ export default function EventCreate({
     });
   }
 
-  function handleEditEvent(e: FormEvent<HTMLButtonElement>) {
+  function handleEditEvent(values: any) {
     if (!isValidName(name)) {
       setNameError(
         "Please enter a valid app name. Use letters, numbers, underscores or hyphens"
       );
-      e.preventDefault();
       return;
     }
-    e.preventDefault();
     editEvent(
       {
         id,
         name,
         editable,
+        notificationType,
       },
       {
         onError: (err: any) => {
@@ -153,64 +175,86 @@ export default function EventCreate({
               Create new event here. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                value={name}
-                className="col-span-3"
-                onChange={(e) => {
-                  const inputValue = e.target.value.toUpperCase();
-                  if (isValidName(inputValue)) {
-                    setName(inputValue);
-                  } else {
-                    setNameError(
-                      "Please enter a valid and unique variable name. Use letters, numbers, underscores or hyphens"
-                    );
-                  }
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms"
-              checked={isChecked} // Set checkbox state
-              onClick={() => {
-                setIsChecked(!isChecked);
-                setEditable(!editable); // Toggle editable state
-              }}
-            />
-            <label
-              htmlFor="terms"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(
+                IsEdit ? handleEditEvent : handleCreateEvent
+              )}
+              className="space-y-8"
             >
-              This event is editable
-            </label>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Close
-              </Button>
-            </DialogClose>
-            <DialogClose asChild>
-              <Button
-                type="submit"
-                onClick={(e) => {
-                  if (IsEdit) {
-                    handleEditEvent(e);
-                  } else {
-                    handleCreateEvent(e);
-                  }
-                }}
-              >
-                {IsEdit ? "Update" : "Create"}
-              </Button>
-            </DialogClose>
-          </DialogFooter>
+              <div className="max-h-[500px] overflow-auto w-full max-w-lg py-4 px-3 gap-4 mb-5">
+                <FormItem className="mb-4">
+                  <FormLabel>Event Name</FormLabel>
+                  <Input
+                    value={name}
+                    onChange={(e) => {
+                      const inputValue = e.target.value.toUpperCase();
+                      if (isValidName(inputValue)) {
+                        setName(inputValue);
+                      } else {
+                        setNameError(
+                          "Please enter a valid and unique variable name. Use letters, numbers, underscores, or hyphens"
+                        );
+                      }
+                    }}
+                  />
+                </FormItem>
+
+                <FormItem className="mb-6">
+                  <FormLabel>Notification Type</FormLabel>
+                  <Select
+                    onValueChange={setNotificationType}
+                    value={notificationType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type of Notification" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={NotificationType.SMS}>
+                          {NotificationType.SMS}
+                        </SelectItem>
+                        <SelectItem value={NotificationType.EMAIL}>
+                          {NotificationType.EMAIL}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+
+                <FormItem className="mb-2">
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="terms"
+                      checked={isChecked}
+                      onClick={() => {
+                        setIsChecked(!isChecked);
+                        setEditable(!editable);
+                      }}
+                      className="mr-2" // Adding margin to the right of the checkbox
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 col-span-3"
+                    >
+                      This event is editable
+                    </label>
+                  </div>
+                </FormItem>
+              </div>
+
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Close
+                  </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button type="submit">{IsEdit ? "Update" : "Create"}</Button>
+                </DialogClose>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>

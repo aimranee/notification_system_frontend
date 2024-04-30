@@ -56,7 +56,7 @@ const Template = () => {
   const [description, setDescription] = useState("");
   const [eventType, setEventType] = useState("");
   const [providerName, setProviderName] = useState("");
-  const [method, setMethod] = useState("");
+  const [notificationType, setNotificationType] = useState("");
   const [smsBody, setSmsBody] = useState("");
   const queryClient = useQueryClient();
   const emailEditorRef = useRef<any>(null);
@@ -84,7 +84,7 @@ const Template = () => {
         setIsActive(false);
         setEventType("");
         setDescription("");
-        setMethod("");
+        setNotificationType("");
         setLanguage("en");
         await queryClient.invalidateQueries(["getAllTemplates"]);
       },
@@ -110,7 +110,6 @@ const Template = () => {
     createTemplate({
       event: selectedEvent as EventResponse,
       emailProvider: selectedProvider as EmailProviderResponse,
-      type: method,
       description: description,
       message: smsBody,
       subject: subject,
@@ -124,7 +123,7 @@ const Template = () => {
   };
 
   const onFinish = async (values: unknown) => {
-    if (method === NotificationType.EMAIL) {
+    if (notificationType === NotificationType.EMAIL) {
       emailEditorRef?.current?.editor.exportHtml((data: any) => {
         const { design, html } = data;
         createTemplateFunc({ design, html });
@@ -147,158 +146,6 @@ const Template = () => {
       </div>
       <div>
         {isShowTemplateEditor && (
-          // <div className="my-3">
-
-          //       <div className="grid grid-cols-5 w-3/4 gap-x-3">
-          //         <FormItem
-          //         // label="Event Type"
-          //         // name="Event Type"
-          //         // rules={[{ required: true }]}
-          //         // className="col-span-2"
-          //         >
-          //         <FormItem
-          //         // name="Notification Type"
-          //         // label="Notification Type"
-          //         // rules={[{ required: true }]}
-          //         // className="col-span-2"
-          //         >
-          //           <FormLabel>Notification Type</FormLabel>
-
-          //           {/* <Select onChange={setMethod}>
-          //             <Option value={NotificationType.EMAIL}>Email</Option>
-          //             <Option value={NotificationType.SMS}>SMS</Option>
-          //             <Option value={NotificationType.PUSH}>Push</Option>
-          //           </Select> */}
-          //         </FormItem>
-          //         <FormItem
-          //         // name="language"
-          //         // label="Language"
-          //         // className="col-span-1"
-          //         >
-          //           <FormLabel>Language</FormLabel>
-
-          //           {/* <Select
-          //             dropdownMatchSelectWidth={false}
-          //             optionLabelProp="value"
-          //             defaultValue={"en"}
-          //             options={Languages_list}
-          //             value={language}
-          //             onChange={setLanguage}
-          //           /> */}
-          //         </FormItem>
-          //       </div>
-
-          //       <div style={{ width: "75%" }}>
-          //         <FormItem
-          //         // name="description"
-          //         // label="Description"
-          //         >
-          //           <FormLabel>Description</FormLabel>
-
-          //           <Textarea
-          //             onChange={(e) => setDescription(e.target.value)}
-          //           />
-          //         </FormItem>
-          //         {selectedEvent && (
-          //           <>
-          //             <h3 className="mb-1.5">Usable Variables</h3>
-
-          //             <div className="flex gap-5 flex-wrap pb-5">
-          //               {/* {selectedEvent?.variables?.map(
-          //                 (
-          //                   variable:
-          //                     | boolean
-          //                     | React.ReactElement<
-          //                         any,
-          //                         string | React.JSXElementConstructor<any>
-          //                       >
-          //                     | React.ReactFragment
-          //                     | React.Key
-          //                     | null
-          //                     | undefined
-          //                 ) => {
-          //                   return (
-          //                     <Button
-          //                       type="dashed"
-          //                       key={variable}
-          //                       size="large"
-          //                       className="flex items-center"
-          //                       onClick={() => {
-          //                         copyToClipboard(variable);
-          //                       }}
-          //                     >
-          //                       {variable}
-          //                       <CopyOutlined />
-          //                     </Button>
-          //                   );
-          //                 }
-          //               )} */}
-          //             </div>
-          //           </>
-          //         )}
-          //         {method === "email" && (
-          //           <FormItem
-          //           // name="subject"
-          //           // label="Subject"
-          //           >
-          //             <FormLabel>Subject</FormLabel>
-
-          //             <Input
-          //               onChange={(event: {
-          //                 target: { value: React.SetStateAction<string> };
-          //               }) => setSubject(event.target.value)}
-          //             />
-          //           </FormItem>
-          //         )}
-          //       </div>
-
-          //       {method === "sms" && (
-          //         <FormItem
-          //         // name="sms-body"
-          //         // isList
-          //         // label="SMS Body"
-          //         // className="w-3/4"
-          //         >
-          //           <FormLabel>SMS Body</FormLabel>
-          //           <Textarea
-          //             onChange={(e: {
-          //               target: { value: React.SetStateAction<string> };
-          //             }) => setSmsBody(e.target.value)}
-          //             rows={4}
-          //           />
-          //         </FormItem>
-          //       )}
-          //     </form>
-          //   </Form>
-          //   {method === "email" && (
-          //     <div className="mb-5">
-          //       <h3 className="text-base pb-3 max-w-3xl mx-auto">Email Body</h3>
-          //       {/* <EmailTemplate ref={emailEditorRef} /> */}
-          //     </div>
-          //   )}
-          //   <div className="max-w-3xl mx-auto">
-          //     <label htmlFor="isActive" className="cursor-pointer pr-2">
-          //       Active
-          //     </label>
-          //     {/* <Switch
-          //       // onChange={setIsActive}
-          //       id="isActive"
-          //       checked={isActive}
-          //       className="bg-gray-500"
-          //     /> */}
-          //   </div>
-          //   <Button
-          //     // type="primary"
-          //     className="bg-blue-700 ml-auto block mb-5 mt-5"
-          //     // htmlType="submit"
-          //     onClick={() => {
-          //       // formRef.current?.submit();
-          //     }}
-          //   >
-          //     Create
-          //   </Button>
-          // </div>
-
           <Card>
             <Form {...form}>
               <form
@@ -316,11 +163,20 @@ const Template = () => {
                     <div className="grid gap-6 sm:grid-cols-3">
                       <div className="grid gap-3">
                         <FormItem>
-                          <FormLabel>Event Type</FormLabel>
+                          <FormLabel>Event Name</FormLabel>
                           <FormControl>
                             <Select
                               onValueChange={(value: any) => {
-                                setEventType(value);
+                                const selectedEvent = allEventsResp?.find(
+                                  (event) => event.name === value
+                                );
+                                if (selectedEvent) {
+                                  setEventType(selectedEvent.name);
+                                  setNotificationType(
+                                    selectedEvent.notificationType
+                                  );
+                                  setNotifTypeCheck(false);
+                                }
                               }}
                             >
                               <SelectTrigger
@@ -340,36 +196,6 @@ const Template = () => {
                                     </SelectItem>
                                   );
                                 })}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </FormItem>
-                      </div>
-
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>Notification Type</FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={(value: any) => {
-                                setMethod(value);
-                                if (value === NotificationType.EMAIL)
-                                  setNotifTypeCheck(false);
-                              }}
-                            >
-                              <SelectTrigger
-                                id="NotificationType"
-                                aria-label="Select Notification Type"
-                              >
-                                <SelectValue placeholder="Select Notification Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={NotificationType.EMAIL}>
-                                  Email
-                                </SelectItem>
-                                <SelectItem value={NotificationType.SMS}>
-                                  SMS
-                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -453,7 +279,7 @@ const Template = () => {
                       </FormItem>
                     </div>
 
-                    {method === "email" && (
+                    {notificationType === "email" && (
                       <div className="grid gap-6">
                         <FormItem>
                           <FormLabel>Subject</FormLabel>
@@ -472,7 +298,7 @@ const Template = () => {
                     )}
                   </div>
 
-                  {method === "email" && (
+                  {notificationType === "email" && (
                     <div className="grid gap-6">
                       <FormItem>
                         <FormLabel>Email Body</FormLabel>
@@ -483,7 +309,7 @@ const Template = () => {
                     </div>
                   )}
 
-                  {method === "sms" && (
+                  {notificationType === "sms" && (
                     <div className="grid gap-6">
                       <FormItem>
                         <FormLabel>SMS Body</FormLabel>
