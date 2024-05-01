@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const columns: ColumnDef<TemplateResponse>[] = [
+export const columns: ColumnDef<EventResponse>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -138,7 +138,7 @@ export const columns: ColumnDef<TemplateResponse>[] = [
 export function TemplateEmailList({
   allTemplatesResp,
 }: {
-  allTemplatesResp: TemplateResponse[] | undefined;
+  allTemplatesResp: EventResponse[] | undefined;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

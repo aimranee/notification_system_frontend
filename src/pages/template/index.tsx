@@ -8,13 +8,11 @@ import React, {
 } from "react";
 import { NotificationType } from "@/utils/Constants";
 import { Languages_list } from "@/utils/CountryList";
-import EventService from "@/services/eventService";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { CopyOutlined } from "@ant-design/icons";
 import Layout from "@/components/layouts/Layout";
-import TemplateService from "@/services/templateService";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -39,22 +37,27 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import EmailTemplate from "@/components/emailTemplate";
 import ProviderService from "@/services/EmailproviderService";
-import TemplateList from "@/components/template/TemplateList";
+import EventList from "@/components/template/EventList";
+import EventService from "@/services/eventService";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const Template = () => {
-  const [isShowTemplateEditor, setIsShowTemplateEditor] = useState(false);
+const Event = () => {
+  const [isShowEventEditor, setIsShowEventEditor] = useState(false);
   const eventService = new EventService();
   const providerService = new ProviderService();
-  const templateService = new TemplateService();
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [eventType, setEventType] = useState("");
+  const [eventName, setEventName] = useState("");
+  const [id, setId] = useState("");
+  const [editable, setEditable] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
   const [providerName, setProviderName] = useState("");
   const [notificationType, setNotificationType] = useState("");
   const [smsBody, setSmsBody] = useState("");
@@ -67,48 +70,53 @@ const Template = () => {
   const [language, setLanguage] = useState("en");
   const form = useForm();
 
-  const { data: allEventsResp } = useQuery(["getAllEvents"], () =>
-    eventService.getAllEvents()
-  );
+  // const { data: allEventsResp } = useQuery(["getAllEvents"], () =>
+  //   eventService.getAllEvents()
+  // );
 
   const { data: providersResp } = useQuery(["getAllProviders"], () =>
     providerService.getAllEmailProviders()
   );
 
-  const { mutate: createTemplate } = useMutation(
-    (data: CreateTemplate) => templateService.createTemplate(data),
+  const { mutate: createEvent } = useMutation(
+    (data: CreateEvent) => eventService.createEvent(data),
     {
       onSuccess: async (data) => {
-        toast.success("Template created successfully");
-        setIsShowTemplateEditor(false);
+        toast.success("Event created successfully");
+        setIsShowEventEditor(false);
+        setEditable(false);
+        setIsChecked(false);
         setIsActive(false);
-        setEventType("");
+        setEventName("");
         setDescription("");
         setNotificationType("");
         setLanguage("en");
-        await queryClient.invalidateQueries(["getAllTemplates"]);
+        await queryClient.invalidateQueries(["getAllEvents"]);
       },
       onSettled: async () => {},
     }
   );
 
-  const selectedEvent = allEventsResp?.find(
-    (event) => event.name === eventType
-  );
+  function isValidName(name: string) {
+    let regexp = new RegExp("^[A-Z_]+$");
+    return regexp.test(name);
+  }
 
   const selectedProvider = providersResp?.find(
     (provider) => provider.name === providerName
   );
 
-  const createTemplateFunc = ({
+  const createEventFunc = ({
     design,
     html,
   }: {
     html?: string;
     design?: string;
   }) => {
-    createTemplate({
-      event: selectedEvent as EventResponse,
+    createEvent({
+      eventName: eventName,
+      editable: editable,
+      notificationType: notificationType,
       emailProvider: selectedProvider as EmailProviderResponse,
       description: description,
       message: smsBody,
@@ -126,11 +134,11 @@ const Template = () => {
     if (notificationType === NotificationType.EMAIL) {
       emailEditorRef?.current?.editor.exportHtml((data: any) => {
         const { design, html } = data;
-        createTemplateFunc({ design, html });
+        createEventFunc({ design, html });
       });
       return;
     }
-    createTemplateFunc({});
+    createEventFunc({});
   };
 
   return (
@@ -138,14 +146,14 @@ const Template = () => {
       <div className="text-right">
         <Button
           onClick={() => {
-            setIsShowTemplateEditor((prevState) => !prevState);
+            setIsShowEventEditor((prevState) => !prevState);
           }}
         >
-          Create Template
+          Create Event
         </Button>
       </div>
       <div>
-        {isShowTemplateEditor && (
+        {isShowEventEditor && (
           <Card>
             <Form {...form}>
               <form
@@ -165,40 +173,44 @@ const Template = () => {
                         <FormItem>
                           <FormLabel>Event Name</FormLabel>
                           <FormControl>
-                            <Select
-                              onValueChange={(value: any) => {
-                                const selectedEvent = allEventsResp?.find(
-                                  (event) => event.name === value
-                                );
-                                if (selectedEvent) {
-                                  setEventType(selectedEvent.name);
-                                  setNotificationType(
-                                    selectedEvent.notificationType
-                                  );
-                                  setNotifTypeCheck(false);
+                            <Input
+                              value={eventName}
+                              onChange={(e) => {
+                                const inputValue = e.target.value.toUpperCase();
+                                if (isValidName(inputValue)) {
+                                  setEventName(inputValue);
                                 }
                               }}
-                            >
-                              <SelectTrigger
-                                id="event"
-                                aria-label="Select Event"
-                              >
-                                <SelectValue placeholder="Select Event" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {allEventsResp?.map((event) => {
-                                  return (
-                                    <SelectItem
-                                      value={event.name}
-                                      key={event.id}
-                                    >
-                                      {event.name}
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
+                            />
                           </FormControl>
+                        </FormItem>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>Notification Type</FormLabel>
+                          <Select
+                            onValueChange={(value: any) => {
+                              setProviderName(value);
+                              setNotifTypeCheck(false);
+                              setNotificationType(value);
+                            }}
+                            value={notificationType}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type of Notification" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectItem value={NotificationType.SMS}>
+                                  {NotificationType.SMS}
+                                </SelectItem>
+                                <SelectItem value={NotificationType.EMAIL}>
+                                  {NotificationType.EMAIL}
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
                         </FormItem>
                       </div>
 
@@ -216,9 +228,10 @@ const Template = () => {
                                 id="providerName"
                                 aria-label="Select Provider Name"
                               >
-                                <SelectValue placeholder="Select Provider Name" />
+                                <SelectValue placeholder="Default" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="null">Default</SelectItem>
                                 {providersResp?.map((provider) => {
                                   return (
                                     <SelectItem
@@ -232,6 +245,23 @@ const Template = () => {
                               </SelectContent>
                             </Select>
                           </FormControl>
+                        </FormItem>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>This event is editable</FormLabel>
+                          <div className="flex items-center">
+                            <Switch
+                              id="terms"
+                              checked={isChecked}
+                              onClick={() => {
+                                setIsChecked(!isChecked);
+                                setEditable(!editable);
+                              }}
+                              className="mr-2" // Adding margin to the right of the checkbox
+                            />
+                          </div>
                         </FormItem>
                       </div>
 
@@ -334,12 +364,12 @@ const Template = () => {
         )}
 
         <div className="pt-3">
-          <h2 className="text-2xl font-semibold pb-2">Templates</h2>
+          <h2 className="text-2xl font-semibold pb-2">Events</h2>
           <div
             className="flex flex-col rounded-lg border border-dashed shadow-sm p-4"
             x-chunk="dashboard-02-chunk-1"
           >
-            <TemplateList />
+            <EventList />
           </div>
         </div>
       </div>
@@ -347,8 +377,8 @@ const Template = () => {
   );
 };
 
-Template.getLayout = function getLayout(page: ReactElement) {
+Event.getLayout = function getLayout(page: ReactElement) {
   return <Layout>{page}</Layout>;
 };
 
-export default Template;
+export default Event;

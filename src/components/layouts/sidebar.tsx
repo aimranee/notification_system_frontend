@@ -40,18 +40,6 @@ export function Sidebar() {
               Dashboard
             </Link>
             <Link
-              href="/event"
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
-                selectedItem === "Event"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              } transition-all hover:text-primary`}
-              onClick={() => handleItemClick("Event")}
-            >
-              <ShoppingCart className="h-12 w-4" />
-              Event
-            </Link>
-            <Link
               href="/template"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                 selectedItem === "Template"

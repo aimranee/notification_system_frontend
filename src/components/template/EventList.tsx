@@ -1,19 +1,19 @@
 import { useQuery } from "react-query";
-import TemplateService from "@/services/templateService";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import EventService from "@/services/eventService";
 import { TemplateEmailList } from "./TemplateEmailList";
 import { TemplateSmsList } from "./TemplateSmsList";
 
-export default function TemplateList() {
-  const templateService = new TemplateService();
+export default function EventList() {
+  const eventService = new EventService();
 
   const { data: emailTemplatesResp } = useQuery(["getAllEmailTemplates"], () =>
-    templateService.getAllEmailTemplates()
+    eventService.getAllEmailTemplates()
   );
 
   const { data: smsTemplatesResp } = useQuery(["getAllSmsTemplates"], () =>
-    templateService.getAllEmailTemplates()
+    eventService.getAllEmailTemplates()
   );
 
   const tabs = [
