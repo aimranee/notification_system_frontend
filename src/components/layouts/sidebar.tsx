@@ -40,7 +40,7 @@ export function Sidebar() {
               Dashboard
             </Link>
             <Link
-              href="/template"
+              href="/event"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                 selectedItem === "Template"
                   ? "text-primary"
@@ -49,7 +49,7 @@ export function Sidebar() {
               onClick={() => handleItemClick("Template")}
             >
               <Package className="h-12 w-4" />
-              Template
+              Events
             </Link>
             <Link
               href="/provider"

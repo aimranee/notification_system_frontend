@@ -8,11 +8,8 @@ type CreateEvent = {
   emailMarkup?: string;
   emailRenderedHtml?: string;
   emailProvider?: object;
-  // active?: boolean;
-  // title?: string;
-  // link?: string;
-  // file?: string;
   language?: string;
+  variables?: string;
 };
 
 type UpdateEvent = CreateEvent & {
@@ -35,9 +32,6 @@ type EventResponse = {
   markup?: string;
   emailRenderedHtml?: string;
   emailProviderName: string;
-  // active?: boolean;
-  // title?: string;
-  // link?: string;
-  // file?: string;
+  variables?: string;
   language?: string;
 };

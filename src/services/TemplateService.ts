@@ -1,6 +1,6 @@
 import ApiClient from "@/lib/apiClient";
 
-class EventService {
+class TemplateService {
   private apiClient: ApiClient;
 
   constructor() {
@@ -73,4 +73,4 @@ class EventService {
   }
 }
 
-export default EventService;
+export default TemplateService;
