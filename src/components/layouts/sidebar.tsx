@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  Home,
-  LineChart,
-  Package,
-  Package2,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
+import { Home, LineChart, Package, Package2, Users } from "lucide-react";
 import { useState } from "react";
 
 export function Sidebar() {
@@ -64,16 +57,16 @@ export function Sidebar() {
               Provider
             </Link>
             <Link
-              href="#"
+              href="/urlshortening"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
-                selectedItem === "Analytics"
+                selectedItem === "urlshortening"
                   ? "text-primary"
                   : "text-muted-foreground"
               } transition-all hover:text-primary`}
-              onClick={() => handleItemClick("Analytics")}
+              onClick={() => handleItemClick("urlshortening")}
             >
               <LineChart className="h-12 w-4" />
-              Analytics
+              URL Shortening
             </Link>
           </nav>
         </div>
