@@ -1,23 +1,41 @@
-import React from "react";
-import { Header } from "./Header";
-import { Sidebar } from "./Sidebar";
-import { Inter as FontSans } from "next/font/google";
+import { Metadata } from "next";
+
+import { siteConfig } from "@/config/sites";
+import { fontSans } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { Header } from "./Header";
+import { TailwindIndicator } from "@/components/tailwind-indicator";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Sidebar } from "./Sidebar";
 
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.name,
+    template: `%s - ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
+};
 
-function Layout({ children }: any) {
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <>
+      {/* <html lang="en" suppressHydrationWarning>
+        <head /> */}
       <div
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
         )}
       >
+        {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
           <Sidebar />
           <div className="flex flex-col">
@@ -27,9 +45,10 @@ function Layout({ children }: any) {
             </main>
           </div>
         </div>
+        <TailwindIndicator />
+        {/* </ThemeProvider> */}
       </div>
+      {/* </html> */}
     </>
   );
 }
-
-export default Layout;
