@@ -33,34 +33,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EmailProviderService from "@/services/EmailproviderService";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { toast } from "react-toastify";
 import { NotificationType } from "@/utils/Constants";
 import { Languages_list } from "@/utils/CountryList";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CopyToClipboard } from "@/utils/CopyToClipboard";
 import EmailTemplate from "../emailTemplate";
 import { ScrollArea } from "../ui/scroll-area";
+import { CopyIcon } from "@radix-ui/react-icons";
 import TemplateService from "@/services/TemplateService";
-
-interface TableRowData {
-  code: string;
-  validation: string;
-}
-
-const initialRowData: TableRowData = {
-  code: "",
-  validation: "",
-};
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "../ui/toast";
+import {
+  assembleData,
+  checkEmailVariablesExist,
+  extractVariablesFromEmailBody,
+  findMissingVariables,
+} from "@/utils/emailUtils";
+import { transformToVariable } from "@/utils/stringFormat";
+import { validateInputs, isValidName } from "@/utils/validationUtils";
+import { copyToClipboard } from "@/utils/CopyToClipboard";
 
 export default function EventCreate({
   IsEdit = false,
@@ -71,7 +71,6 @@ export default function EventCreate({
   EventDetails?: EventResponse;
   EventType?: string;
 }) {
-  const [isShowEventEditor, setIsShowEventEditor] = useState(false);
   const eventService = new TemplateService();
   const providerService = new EmailProviderService();
   const [subject, setSubject] = useState("");
@@ -85,44 +84,11 @@ export default function EventCreate({
   const [smsBody, setSmsBody] = useState("");
   const queryClient = useQueryClient();
   const emailEditorRef = useRef<any>(null);
-  const [isActive, setIsActive] = useState(true);
-  const [title, setTitle] = useState("");
-  const [imageLink, setImageLink] = useState("");
   const [notifTypeCheck, setNotifTypeCheck] = useState(true);
   const [language, setLanguage] = useState("en");
   const form = useForm();
-  const [variables, setVariables] = useState<string[] | undefined>([]);
-  const [variable, setVariable] = useState("");
-  const [rows, setRows] = useState<TableRowData[]>([initialRowData]);
-
-  // useEffect(() => {
-  //   if (IsEdit && ProviderDetails && ProviderType != undefined) {
-  //     setProviderName(ProviderDetails?.mailProtocol);
-  //     setNotificationType(ProviderType);
-  //     if (ProviderDetails.mailProtocol === ProviderName.TWILIO) {
-  //       // let tempConfig = ProviderDetails.data as TwilioSmsConfig;
-  //       // setAccountSid(tempConfig.account_sid);
-  //       // setAuthToken(tempConfig.auth_token);
-  //       // setSenderId(tempConfig.sender_id);
-  //     } else if (ProviderDetails.mailProtocol === ProviderName.VONAGE) {
-  //       // let tempConfig = ProviderDetails.data as VonageSmsConfig;
-  //       // let api_Key = tempConfig.api_key as ProviderValue;
-  //       // let api_secret = tempConfig.api_secret as ProviderValue;
-  //       // let sender_id = tempConfig.sender_id as ProviderValue;
-  //       // setApiKey(api_Key.value);
-  //       // setApiSecret(api_secret.value);
-  //       // setSenderId(sender_id.value);
-  //     } else if (ProviderDetails.mailProtocol === ProviderName.SMTP) {
-  //       let tempConfig = ProviderDetails;
-  //       setSslTrust(tempConfig.sslTrust);
-  //       setMailHost(tempConfig.mailHost);
-  //       setMailPort(tempConfig.mailPort);
-  //       setName(tempConfig.name);
-  //       setMailUsername(tempConfig.mailUsername);
-  //       setMailPassword(tempConfig.mailPassword);
-  //     }
-  //   }
-  // }, [IsEdit, ProviderDetails, ProviderType]);
+  const [variables, setVariables] = useState([{ code: "", validation: "" }]);
+  const { toast } = useToast();
 
   const { data: providersResp } = useQuery(["getAllProviders"], () =>
     providerService.getAllEmailProviders()
@@ -132,25 +98,24 @@ export default function EventCreate({
     (data: CreateEvent) => eventService.createEvent(data),
     {
       onSuccess: async (data) => {
-        toast.success("Event created successfully");
-        setIsShowEventEditor(false);
+        toast({ description: "Event created successfully" });
         setEditable(false);
         setIsChecked(false);
-        setIsActive(false);
         setEventName("");
         setDescription("");
         setNotificationType("");
         setLanguage("en");
+        setVariables([{ code: "", validation: "" }]);
         await queryClient.invalidateQueries(["getAllEvents"]);
       },
       onSettled: async () => {},
     }
   );
 
-  function isValidName(name: string) {
-    let regexp = new RegExp("^[A-Z_]+$");
-    return regexp.test(name);
-  }
+  useEffect(() => {
+    // window is accessible here.
+    // console.log("window.innerHeight", window.innerHeight);
+  }, []);
 
   const selectedProvider = providersResp?.find(
     (provider) => provider.name === providerName
@@ -180,49 +145,75 @@ export default function EventCreate({
     });
   };
 
-  const addRow = () => {
-    setRows([...rows, { ...initialRowData }]); // Create a new object for each row
+  const addVariant = () => {
+    setVariables([...variables, { code: "", validation: "" }]);
   };
 
-  const handleInputChange = <T extends keyof TableRowData>(
+  const handleInputChange = (
     index: number,
-    field: T,
-    value: TableRowData[T]
+    field: keyof Variable,
+    value: string
   ) => {
-    const updatedRows = [...rows];
-    updatedRows[index] = {
-      ...updatedRows[index], // Preserve other properties of the row
-      [field]: value,
-    };
-    setRows(updatedRows);
+    const updatedVariables = [...variables];
+    updatedVariables[index][field] = value;
+    setVariables(updatedVariables);
   };
 
   const removeRow = (index: number) => {
-    setRows(rows.filter((_, i) => i !== index)); // Filter out the row to be removed
-  };
-
-  const assembleData = () => {
-    let assembledString = "";
-    rows.forEach((row, index) => {
-      assembledString += `${row.code}: ${row.validation}`;
-      if (index !== rows.length - 1) {
-        assembledString += ", ";
-      }
-    });
-    return assembledString;
+    const updatedVariables = [...variables];
+    updatedVariables.splice(index, 1);
+    setVariables(updatedVariables);
   };
 
   const onFinish = async (values: unknown) => {
     if (notificationType === NotificationType.EMAIL) {
       emailEditorRef?.current?.editor.exportHtml((data: any) => {
         const { design, html } = data;
-        const assembledData = assembleData(); // Call assembleData function
-        createEventFunc({ design, html, assembledData }); // Pass assembledData to createEventFunc
+        const assembledData = assembleData(variables);
+        createEventFunc({ design, html, assembledData });
+        const isVariablesExist = checkEmailVariablesExist(html, variables);
+        const emailBodyVariables = extractVariablesFromEmailBody(html); // Extract variables from email body
+        const missingVariables = findMissingVariables(
+          emailBodyVariables,
+          variables
+        ); // Find missing variables
+        if (missingVariables?.length > 0) {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong.",
+            description: `Error: ${missingVariables?.join(
+              ", "
+            )} do not exist in variables list`,
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+          return;
+        }
+        if (!isVariablesExist) {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong.",
+            description:
+              "One or more variables do not exist in the template or SMS body.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+          return;
+        }
+        if (!validateInputs(variables)) {
+          // Abort submission if any input is invalid
+
+          return;
+        }
       });
       return;
     }
+
     createEventFunc({});
   };
+
+  const handleCopyClick = (code: string) => {
+    copyToClipboard(transformToVariable(code));
+  };
+
   return (
     <>
       <Dialog>
@@ -239,167 +230,164 @@ export default function EventCreate({
           <DialogHeader>
             <DialogTitle>Create Event</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you're done.
+              Make changes to your event here. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[600px] overflow-auto">
             <Card>
               {/* <ScrollArea className="h-400 w-800 rounded-md border"> */}
+
+              <CardHeader>
+                <CardTitle>Template Details</CardTitle>
+                <CardDescription>
+                  {/* Lipsum dolor sit amet, consectetur adipiscing elit */}
+                </CardDescription>
+              </CardHeader>
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onFinish)}
-                  className="space-y-8"
-                >
-                  <CardHeader>
-                    <CardTitle>Product Details</CardTitle>
-                    <CardDescription>
-                      Lipsum dolor sit amet, consectetur adipiscing elit
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-6 lg:w-8/12">
-                      <div className="grid gap-6 sm:grid-cols-3">
-                        <div className="grid gap-3">
-                          <FormItem>
-                            <FormLabel>Event Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                value={eventName}
-                                onChange={(e) => {
-                                  const inputValue =
-                                    e.target.value.toUpperCase();
-                                  if (isValidName(inputValue)) {
-                                    setEventName(inputValue);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        </div>
-
-                        <div className="grid gap-3">
-                          <FormItem>
-                            <FormLabel>Notification Type</FormLabel>
-                            <Select
-                              onValueChange={(value: any) => {
-                                setProviderName(value);
-                                setNotifTypeCheck(false);
-                                setNotificationType(value);
-                              }}
-                              value={notificationType}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type of Notification" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  <SelectItem value={NotificationType.SMS}>
-                                    {NotificationType.SMS}
-                                  </SelectItem>
-                                  <SelectItem value={NotificationType.EMAIL}>
-                                    {NotificationType.EMAIL}
-                                  </SelectItem>
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          </FormItem>
-                        </div>
-
-                        <div className="grid gap-3">
-                          <FormItem>
-                            <FormLabel>Provider Name</FormLabel>
-                            <FormControl>
-                              <Select
-                                disabled={notifTypeCheck}
-                                onValueChange={(value: any) => {
-                                  setProviderName(value);
-                                }}
-                              >
-                                <SelectTrigger
-                                  id="providerName"
-                                  aria-label="Select Provider Name"
-                                >
-                                  <SelectValue placeholder="Default" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="null">Default</SelectItem>
-                                  {providersResp?.map((provider) => {
-                                    return (
-                                      <SelectItem
-                                        value={provider.name}
-                                        key={provider.id}
-                                      >
-                                        {provider.name}
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          </FormItem>
-                        </div>
-
-                        <div className="grid gap-3">
-                          <FormItem>
-                            <FormLabel>This event is editable</FormLabel>
-                            <div className="flex items-center">
-                              <Switch
-                                id="terms"
-                                checked={isChecked}
-                                onClick={() => {
-                                  setIsChecked(!isChecked);
-                                  setEditable(!editable);
-                                }}
-                                className="mr-2"
-                              />
-                            </div>
-                          </FormItem>
-                        </div>
-
-                        <div className="grid gap-3">
-                          <FormItem>
-                            <FormLabel>Language</FormLabel>
-                            <FormControl>
-                              <Select onValueChange={setLanguage}>
-                                <SelectTrigger
-                                  id="language"
-                                  aria-label="Select language"
-                                >
-                                  <SelectValue placeholder="Select Language" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Languages_list?.map((language) => {
-                                    return (
-                                      <SelectItem
-                                        value={language.value}
-                                        key={language.value}
-                                      >
-                                        {language.label}
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          </FormItem>
-                        </div>
-                      </div>
-
-                      <div className="grid gap-6">
+                <CardContent>
+                  <div className="grid gap-6 lg:w-8/12">
+                    <div className="grid gap-6 sm:grid-cols-3">
+                      <div className="grid gap-3">
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>Event Name</FormLabel>
                           <FormControl>
-                            <Textarea
-                              id="description"
-                              className="min-h-20"
-                              onChangeCapture={(e) =>
-                                setDescription(e.currentTarget.value)
-                              }
+                            <Input
+                              value={eventName}
+                              onChange={(e) => {
+                                const inputValue = e.target.value.toUpperCase();
+                                if (isValidName(inputValue)) {
+                                  setEventName(inputValue);
+                                }
+                              }}
                             />
                           </FormControl>
                         </FormItem>
                       </div>
 
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>Notification Type</FormLabel>
+                          <Select
+                            onValueChange={(value: any) => {
+                              setProviderName(value);
+                              setNotifTypeCheck(false);
+                              setNotificationType(value);
+                            }}
+                            value={notificationType}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type of Notification" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectItem value={NotificationType.SMS}>
+                                  {NotificationType.SMS}
+                                </SelectItem>
+                                <SelectItem value={NotificationType.EMAIL}>
+                                  {NotificationType.EMAIL}
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>Provider Name</FormLabel>
+                          <FormControl>
+                            <Select
+                              disabled={notifTypeCheck}
+                              onValueChange={(value: any) => {
+                                setProviderName(value);
+                              }}
+                            >
+                              <SelectTrigger
+                                id="providerName"
+                                aria-label="Select Provider Name"
+                              >
+                                <SelectValue placeholder="Default" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="null">Default</SelectItem>
+                                {providersResp?.map((provider) => {
+                                  return (
+                                    <SelectItem
+                                      value={provider.name}
+                                      key={provider.id}
+                                    >
+                                      {provider.name}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                        </FormItem>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>This event is editable</FormLabel>
+                          <div className="flex items-center">
+                            <Switch
+                              id="terms"
+                              checked={isChecked}
+                              onClick={() => {
+                                setIsChecked(!isChecked);
+                                setEditable(!editable);
+                              }}
+                              className="mr-2"
+                            />
+                          </div>
+                        </FormItem>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <FormItem>
+                          <FormLabel>Language</FormLabel>
+                          <FormControl>
+                            <Select onValueChange={setLanguage}>
+                              <SelectTrigger
+                                id="language"
+                                aria-label="Select language"
+                              >
+                                <SelectValue placeholder="Select Language" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Languages_list?.map((language) => {
+                                  return (
+                                    <SelectItem
+                                      value={language.value}
+                                      key={language.value}
+                                    >
+                                      {language.label}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                        </FormItem>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-6">
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            id="description"
+                            className="min-h-20"
+                            onChangeCapture={(e) =>
+                              setDescription(e.currentTarget.value)
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    </div>
+                    {(notificationType === "email" ||
+                      notificationType === "sms") && (
                       <div className="grid gap-6">
                         <Card x-chunk="dashboard-07-chunk-1">
                           <CardHeader>
@@ -422,26 +410,30 @@ export default function EventCreate({
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {rows.map((row, index) => (
+                                {variables.map((variable, index) => (
                                   <TableRow key={index}>
                                     <TableCell>
                                       <Input
                                         id={`code-${index}`}
-                                        value={row.code}
-                                        onChange={(e) =>
-                                          handleInputChange(
-                                            index,
-                                            "code",
-                                            e.target.value
-                                          )
-                                        }
+                                        value={variable.code}
+                                        onChange={(e) => {
+                                          const inputValue =
+                                            e.target.value.toUpperCase();
+                                          if (isValidName(inputValue)) {
+                                            handleInputChange(
+                                              index,
+                                              "code",
+                                              inputValue
+                                            );
+                                          }
+                                        }}
                                         placeholder="Enter code"
                                       />
                                     </TableCell>
                                     <TableCell>
                                       <Input
                                         id={`validation-${index}`}
-                                        value={row.validation}
+                                        value={variable.validation}
                                         onChange={(e) =>
                                           handleInputChange(
                                             index,
@@ -461,16 +453,20 @@ export default function EventCreate({
                                         <ToggleGroupItem
                                           value="s"
                                           onClick={() => {
-                                            CopyToClipboard(row.code);
+                                            handleCopyClick(variable.code);
                                           }}
                                         >
-                                          S
+                                          <span className="sr-only">Copy</span>
+                                          <CopyIcon className="h-4 w-4" />
                                         </ToggleGroupItem>
                                         <ToggleGroupItem
                                           onClick={() => removeRow(index)}
                                           value=""
                                         >
-                                          D
+                                          <span className="sr-only">
+                                            Delete
+                                          </span>
+                                          <Trash2 className="h-4 w-4" />
                                         </ToggleGroupItem>
                                       </ToggleGroup>
                                     </TableCell>
@@ -484,7 +480,7 @@ export default function EventCreate({
                               size="sm"
                               variant="ghost"
                               className="gap-1"
-                              onClick={addRow}
+                              onClick={addVariant}
                             >
                               <PlusCircle className="h-3.5 w-3.5" />
                               Add Variant
@@ -492,63 +488,69 @@ export default function EventCreate({
                           </CardFooter>
                         </Card>
                       </div>
-
-                      {notificationType === "email" && (
-                        <div className="grid gap-6">
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <FormControl>
-                              <Input
-                                id="name"
-                                type="text"
-                                className="w-full"
-                                onChangeCapture={(e) =>
-                                  setSubject(e.currentTarget.value)
-                                }
-                              />
-                            </FormControl>
-                          </FormItem>
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                     {notificationType === "email" && (
                       <div className="grid gap-6">
                         <FormItem>
-                          <FormLabel>Email Body</FormLabel>
+                          <FormLabel>Subject</FormLabel>
                           <FormControl>
-                            <EmailTemplate ref={emailEditorRef} />
-                          </FormControl>
-                        </FormItem>
-                      </div>
-                    )}
-
-                    {notificationType === "sms" && (
-                      <div className="grid gap-6">
-                        <FormItem>
-                          <FormLabel>SMS Body</FormLabel>
-                          <FormControl>
-                            <Textarea
+                            <Input
+                              id="name"
+                              type="text"
+                              className="w-full"
                               onChangeCapture={(e) =>
-                                setSmsBody(e.currentTarget.value)
+                                setSubject(e.currentTarget.value)
                               }
-                              rows={4}
                             />
                           </FormControl>
                         </FormItem>
                       </div>
                     )}
+                  </div>
 
-                    <DialogClose asChild>
-                      <DialogFooter>
-                        <Button type="submit">
-                          {IsEdit ? "Update" : "Create"}
-                        </Button>
-                      </DialogFooter>
-                    </DialogClose>
-                  </CardContent>
-                </form>
+                  {notificationType === "email" && (
+                    <div className="grid gap-6">
+                      <FormItem>
+                        <FormLabel>Email Body</FormLabel>
+                        <FormControl>
+                          <EmailTemplate ref={emailEditorRef} />
+                        </FormControl>
+                      </FormItem>
+                    </div>
+                  )}
+
+                  {notificationType === "sms" && (
+                    <div className="grid gap-6">
+                      <FormItem>
+                        <FormLabel>SMS Body</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            onChangeCapture={(e) =>
+                              setSmsBody(e.currentTarget.value)
+                            }
+                            rows={2}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    </div>
+                  )}
+
+                  {/* <DialogClose asChild> */}
+                  <DialogFooter>
+                    <form
+                      onSubmit={form.handleSubmit(onFinish)}
+                      className="space-y-8"
+                    >
+                      <Button type="submit">
+                        {IsEdit ? "Update" : "Create"}
+                      </Button>
+                    </form>
+                  </DialogFooter>
+                  {/* </DialogClose> */}
+                </CardContent>
               </Form>
+
               {/* </ScrollArea> */}
             </Card>
           </div>

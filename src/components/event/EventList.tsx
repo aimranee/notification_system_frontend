@@ -1,11 +1,15 @@
 import { useQuery } from "react-query";
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { TemplateEmailList } from "./TemplateEmailList";
 import { TemplateSmsList } from "./TemplateSmsList";
 import TemplateService from "@/services/TemplateService";
 
 export default function EventList() {
+  useEffect(() => {
+    // window is accessible here.
+    console.log("window.innerHeight", window.innerHeight);
+  }, []);
   const eventService = new TemplateService();
 
   const { data: emailTemplatesResp } = useQuery(["getAllEmailTemplates"], () =>
