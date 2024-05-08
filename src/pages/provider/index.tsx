@@ -1,9 +1,13 @@
-import React, { ReactElement } from "react";
+import React, { ReactElement, useEffect } from "react";
 import Layout from "@/components/layouts/Layout";
 import ProviderList from "@/components/provider/ProviderList";
 import ProviderCreate from "@/components/provider/ProviderCreate";
 
 const Provider = ({}) => {
+  useEffect(() => {
+    // window is accessible here.
+    // console.log("window.innerHeight", window.innerHeight);
+  }, []);
   return (
     <>
       <div className="flex h-14 items-center">

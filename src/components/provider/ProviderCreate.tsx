@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "react-query";
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import ProviderService from "@/services/EmailproviderService";
 import { NotificationType, ProviderName } from "@/utils/Constants";
 import { Input } from "../ui/input";
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { Switch } from "../ui/switch";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ProviderCreate({
   IsEdit = false,
@@ -37,6 +37,7 @@ export default function ProviderCreate({
   ProviderDetails?: EmailProviderResponse;
   ProviderType?: string;
 }) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const providerService = new ProviderService();
   const form = useForm();
@@ -166,8 +167,14 @@ export default function ProviderCreate({
         },
         {
           onError: (err: any) => {
-            toast.error(
-              err?.message ? err?.message : "Error creating provider"
+            toast(
+              err?.message
+                ? err?.message
+                : {
+                    variant: "destructive",
+                    title: "Something went wrong.",
+                    description: "Error creating provider",
+                  }
             );
           },
           onSuccess: async () => {
@@ -176,13 +183,17 @@ export default function ProviderCreate({
               queryClient.invalidateQueries(["getAllSmsProviders"]),
               queryClient.invalidateQueries(["getAllEmailProviders"]),
             ]);
-            toast.success("Provider created successfully");
+            toast({ description: "Provider created successfully" });
             clearForm();
           },
         }
       );
     } else {
-      toast.error("Select Provider type");
+      toast({
+        variant: "destructive",
+        title: "Something went wrong.",
+        description: "Select Provider type",
+      });
       return;
     }
 
@@ -260,7 +271,7 @@ export default function ProviderCreate({
     (data: CreateEmailProvider) => providerService.createEmailProvider(data),
     {
       onSuccess: async (data) => {
-        console.log(data);
+        // console.log(data);
       },
       onSettled: async () => {},
     }
