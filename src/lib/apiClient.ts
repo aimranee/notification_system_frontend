@@ -7,6 +7,21 @@ class ApiClient {
     this.httpClient = new HttpClient(baseUrl, timeout);
   }
 
+  setToken(token: string | null) {
+    if (token) {
+      this.httpClient.addHeader("Authorization", `Bearer ${token}`);
+      return this;
+    }
+
+    this.httpClient.removeHeader("Authorization");
+    return this;
+  }
+
+  setUserInfo(userInfo: any) {
+    this.httpClient.addHeader("userInfo", `${JSON.stringify(userInfo)}`);
+    return this;
+  }
+
   async post(url: string, Request: any): Promise<any> {
     return this.httpClient.post(url, Request).then((response) => {
       return response;

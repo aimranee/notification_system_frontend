@@ -1,5 +1,4 @@
 import axios, {
-  AxiosError,
   AxiosInstance,
   AxiosResponse,
   Method,
@@ -35,9 +34,11 @@ export class HttpClientError<TError = any> extends Error {
 
 class HttpClient {
   private axiosInstance: AxiosInstance;
+  private token: string | null = null;
 
   constructor(baseUrl = "", timeout = 20000) {
     this.axiosInstance = axios.create({
+      withCredentials: true,
       baseURL: baseUrl,
       timeout,
       headers: {
@@ -46,9 +47,23 @@ class HttpClient {
     });
   }
 
+  setToken(token: string) {
+    this.token = token;
+    this.axiosInstance.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+  }
+
   private async request<TData>(
     config: HttpClientRequest
   ): Promise<HttpClientResponse<TData>> {
+    if (this.token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${this.token}`,
+      };
+    }
+
     return this.axiosInstance
       .request(config)
       .then((response) => {
@@ -81,6 +96,26 @@ class HttpClient {
   async delete<TData = any>(url: string, config: HttpClientRequest = {}) {
     return this.request<TData>({ method: "DELETE", url, ...config });
   }
+
+  addHeader(name: string, value: string) {
+    this.axiosInstance.defaults.headers.common[name] = value;
+  }
+
+  removeHeader(name: string) {
+    delete this.axiosInstance.defaults.headers.common[name];
+  }
+
+  addResponseInterceptor = (
+    successCallback: (
+      value: AxiosResponse<any>
+    ) => AxiosResponse<any> | Promise<AxiosResponse<any>>,
+    errorCallback: (err: any) => any
+  ) => {
+    this.axiosInstance.interceptors.response.use(
+      successCallback,
+      errorCallback
+    );
+  };
 }
 
 export default HttpClient;
