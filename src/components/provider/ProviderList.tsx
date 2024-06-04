@@ -3,9 +3,13 @@ import ProviderService from "@/services/EmailproviderService";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { EmailProviderList } from "./EmailProviderList";
+import { useSession } from "next-auth/react";
 
 export default function ProviderList() {
-  const providerService = new ProviderService();
+  const { data: session, status } = useSession();
+  const providerService = new ProviderService(
+    session?.user?.access_token || ""
+  );
 
   const { data: emailProvidersResp } = useQuery(["getAllEmailProviders"], () =>
     providerService.getAllEmailProviders()

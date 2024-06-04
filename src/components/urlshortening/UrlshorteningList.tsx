@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "react-query";
 import UrlshorteningService from "@/services/UrlshorteningService";
+import { useSession } from "next-auth/react";
 
 export const columns: ColumnDef<UrlshorteningResponse>[] = [
   {
@@ -138,21 +139,15 @@ export const columns: ColumnDef<UrlshorteningResponse>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+            <Button aria-haspopup="true" size="icon" variant="ghost">
               <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Toggle menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(urlshortening.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View urlshortening details</DropdownMenuItem>
+            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -168,7 +163,10 @@ export function UrlshorteningList() {
   const [rowSelection, setRowSelection] = useState({});
   const [listData, setListData] = useState<UrlshorteningResponse[]>([]);
   const [filterOption, setFilterOption] = useState<string>("All");
-  const urlshorteningService = new UrlshorteningService();
+  const { data: session, status } = useSession();
+  const urlshorteningService = new UrlshorteningService(
+    session?.user?.access_token || ""
+  );
 
   const { data: urlshorteningsResp } = useQuery(["getAll"], () =>
     urlshorteningService.getAll()

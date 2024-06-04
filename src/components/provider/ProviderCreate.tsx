@@ -27,6 +27,7 @@ import {
 import { useForm } from "react-hook-form";
 import { Switch } from "../ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { useSession } from "next-auth/react";
 
 export default function ProviderCreate({
   IsEdit = false,
@@ -38,8 +39,12 @@ export default function ProviderCreate({
   ProviderType?: string;
 }) {
   const { toast } = useToast();
+  const { data: session, status } = useSession();
+
   const queryClient = useQueryClient();
-  const providerService = new ProviderService();
+  const providerService = new ProviderService(
+    session?.user?.access_token || ""
+  );
   const form = useForm();
   const [providerName, setProviderName] = useState("");
   const [providerValue, setProviderValue] = useState("");
@@ -167,15 +172,15 @@ export default function ProviderCreate({
         },
         {
           onError: (err: any) => {
-            toast(
-              err?.message
-                ? err?.message
-                : {
-                    variant: "destructive",
-                    title: "Something went wrong.",
-                    description: "Error creating provider",
-                  }
-            );
+            // toast(
+            //   err?.message
+            //     ? err?.message
+            //     : {
+            //         variant: "destructive",
+            //         title: "Something went wrong.",
+            //         description: "Error creating provider",
+            //       }
+            // );
           },
           onSuccess: async () => {
             await Promise.all([
@@ -183,17 +188,17 @@ export default function ProviderCreate({
               queryClient.invalidateQueries(["getAllSmsProviders"]),
               queryClient.invalidateQueries(["getAllEmailProviders"]),
             ]);
-            toast({ description: "Provider created successfully" });
+            // toast({ description: "Provider created successfully" });
             clearForm();
           },
         }
       );
     } else {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong.",
-        description: "Select Provider type",
-      });
+      // toast({
+      //   variant: "destructive",
+      //   title: "Something went wrong.",
+      //   description: "Select Provider type",
+      // });
       return;
     }
 
