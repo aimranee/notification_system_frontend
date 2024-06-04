@@ -3,10 +3,11 @@ import ApiClient from "@/lib/apiClient";
 class UrlshorteningService {
   private apiClient: ApiClient;
 
-  constructor() {
+  constructor(token: string) {    
     this.apiClient = new ApiClient(
       `${process.env.API_BASE_URL}/urlshortening-service`
     );
+    this.apiClient.setToken(token);
   }
 
   async getAll(): Promise<UrlshorteningResponse[]> {

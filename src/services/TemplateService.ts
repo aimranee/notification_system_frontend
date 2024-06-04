@@ -3,10 +3,11 @@ import ApiClient from "@/lib/apiClient";
 class TemplateService {
   private apiClient: ApiClient;
 
-  constructor() {
+  constructor(token: string) {
     this.apiClient = new ApiClient(
       `${process.env.API_BASE_URL}/notification-service/api/event`
     );
+    this.apiClient.setToken(token);
   }
 
   async getAllEmailTemplates(): Promise<EventResponse[]> {

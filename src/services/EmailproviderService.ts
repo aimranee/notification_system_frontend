@@ -3,10 +3,11 @@ import ApiClient from "@/lib/apiClient";
 class EmailProviderService {
   private apiClient: ApiClient;
 
-  constructor() {
+  constructor(token: string) {
     this.apiClient = new ApiClient(
       `${process.env.API_BASE_URL}/notification-service/api/emailProvider`
     );
+    this.apiClient.setToken(token);
   }
 
   async getAllEmailProviders(): Promise<EmailProviderResponse[]> {
@@ -21,7 +22,7 @@ class EmailProviderService {
 
   // async getProvider(id: number): Promise<ProviderResponse> {
   //   return this.apiClient
-  //     .get("/v2/provider/" + id)
+  //     .get("/provider/" + id)
   //     .then((response) => response.data)
   //     .catch((err) => {
   //       throw err.data;
