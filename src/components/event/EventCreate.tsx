@@ -46,37 +46,40 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { NotificationType } from "@/utils/Constants";
 import { Languages_list } from "@/utils/CountryList";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import EmailTemplate from "../emailTemplate";
 import { ScrollArea } from "../ui/scroll-area";
 import { CopyIcon } from "@radix-ui/react-icons";
 import TemplateService from "@/services/TemplateService";
+import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
-import { ToastAction } from "../ui/toast";
 import {
   assembleData,
   checkEmailVariablesExist,
   extractVariablesFromEmailBody,
   findMissingVariables,
-} from "@/utils/emailUtils";
-import { transformToVariable } from "@/utils/stringFormat";
-import { validateInputs, isValidName } from "@/utils/validationUtils";
+} from "@/utils/EmailUtils";
+import { transformToVariable } from "@/utils/StringFormat";
+import { validateInputs, isValidName } from "@/utils/ValidationUtils";
 import { copyToClipboard } from "@/utils/CopyToClipboard";
+import { useSession } from "next-auth/react";
+import EmailTemplate from "../emailTemplate";
 
 export default function EventCreate({
   IsEdit = false,
-  EventDetails,
-  EventType,
-}: {
+}: // EventDetails,
+// EventType,
+{
   IsEdit?: boolean;
-  EventDetails?: EventResponse;
-  EventType?: string;
+  // EventDetails?: EventResponse;
+  // EventType?: string;
 }) {
-  const eventService = new TemplateService();
-  const providerService = new EmailProviderService();
+  const { data: session, status } = useSession();
+  const eventService = new TemplateService(session?.user?.access_token || "");
+  const providerService = new EmailProviderService(
+    session?.user?.access_token || ""
+  );
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [eventName, setEventName] = useState("");
-  const [id, setId] = useState("");
   const [editable, setEditable] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [providerName, setProviderName] = useState("");
@@ -112,10 +115,7 @@ export default function EventCreate({
     }
   );
 
-  useEffect(() => {
-    // window is accessible here.
-    // console.log("window.innerHeight", window.innerHeight);
-  }, []);
+  useEffect(() => {}, []);
 
   const selectedProvider = providersResp?.find(
     (provider) => provider.name === providerName
@@ -212,6 +212,7 @@ export default function EventCreate({
 
   const handleCopyClick = (code: string) => {
     copyToClipboard(transformToVariable(code));
+    toast({ description: "Copied to clipboard : " + code });
   };
 
   return (
@@ -235,323 +236,324 @@ export default function EventCreate({
           </DialogHeader>
           <div className="max-h-[600px] overflow-auto">
             <Card>
-              {/* <ScrollArea className="h-400 w-800 rounded-md border"> */}
+              <ScrollArea className="h-400 w-800 rounded-md border">
+                <CardHeader>
+                  <CardTitle>Template Details</CardTitle>
+                  <CardDescription>
+                    {/* Lipsum dolor sit amet, consectetur adipiscing elit */}
+                  </CardDescription>
+                </CardHeader>
+                <Form {...form}>
+                  <CardContent>
+                    <div className="grid gap-6 lg:w-8/12">
+                      <div className="grid gap-6 sm:grid-cols-3">
+                        <div className="grid gap-3">
+                          <FormItem>
+                            <FormLabel>Event Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                value={eventName}
+                                onChange={(e) => {
+                                  const inputValue =
+                                    e.target.value.toUpperCase();
+                                  if (isValidName(inputValue)) {
+                                    setEventName(inputValue);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        </div>
 
-              <CardHeader>
-                <CardTitle>Template Details</CardTitle>
-                <CardDescription>
-                  {/* Lipsum dolor sit amet, consectetur adipiscing elit */}
-                </CardDescription>
-              </CardHeader>
-              <Form {...form}>
-                <CardContent>
-                  <div className="grid gap-6 lg:w-8/12">
-                    <div className="grid gap-6 sm:grid-cols-3">
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>Event Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              value={eventName}
-                              onChange={(e) => {
-                                const inputValue = e.target.value.toUpperCase();
-                                if (isValidName(inputValue)) {
-                                  setEventName(inputValue);
-                                }
-                              }}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      </div>
-
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>Notification Type</FormLabel>
-                          <Select
-                            onValueChange={(value: any) => {
-                              setProviderName(value);
-                              setNotifTypeCheck(false);
-                              setNotificationType(value);
-                            }}
-                            value={notificationType}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type of Notification" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectItem value={NotificationType.SMS}>
-                                  {NotificationType.SMS}
-                                </SelectItem>
-                                <SelectItem value={NotificationType.EMAIL}>
-                                  {NotificationType.EMAIL}
-                                </SelectItem>
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      </div>
-
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>Provider Name</FormLabel>
-                          <FormControl>
+                        <div className="grid gap-3">
+                          <FormItem>
+                            <FormLabel>Notification Type</FormLabel>
                             <Select
-                              disabled={notifTypeCheck}
                               onValueChange={(value: any) => {
                                 setProviderName(value);
+                                setNotifTypeCheck(false);
+                                setNotificationType(value);
                               }}
+                              value={notificationType}
                             >
-                              <SelectTrigger
-                                id="providerName"
-                                aria-label="Select Provider Name"
-                              >
-                                <SelectValue placeholder="Default" />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type of Notification" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="null">Default</SelectItem>
-                                {providersResp?.map((provider) => {
-                                  return (
-                                    <SelectItem
-                                      value={provider.name}
-                                      key={provider.id}
-                                    >
-                                      {provider.name}
-                                    </SelectItem>
-                                  );
-                                })}
+                                <SelectGroup>
+                                  <SelectItem value={NotificationType.SMS}>
+                                    {NotificationType.SMS}
+                                  </SelectItem>
+                                  <SelectItem value={NotificationType.EMAIL}>
+                                    {NotificationType.EMAIL}
+                                  </SelectItem>
+                                </SelectGroup>
                               </SelectContent>
                             </Select>
-                          </FormControl>
-                        </FormItem>
-                      </div>
+                          </FormItem>
+                        </div>
 
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>This event is editable</FormLabel>
-                          <div className="flex items-center">
-                            <Switch
-                              id="terms"
-                              checked={isChecked}
-                              onClick={() => {
-                                setIsChecked(!isChecked);
-                                setEditable(!editable);
-                              }}
-                              className="mr-2"
-                            />
-                          </div>
-                        </FormItem>
-                      </div>
-
-                      <div className="grid gap-3">
-                        <FormItem>
-                          <FormLabel>Language</FormLabel>
-                          <FormControl>
-                            <Select onValueChange={setLanguage}>
-                              <SelectTrigger
-                                id="language"
-                                aria-label="Select language"
+                        <div className="grid gap-3">
+                          <FormItem>
+                            <FormLabel>Provider Name</FormLabel>
+                            <FormControl>
+                              <Select
+                                disabled={notifTypeCheck}
+                                onValueChange={(value: any) => {
+                                  setProviderName(value);
+                                }}
                               >
-                                <SelectValue placeholder="Select Language" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Languages_list?.map((language) => {
-                                  return (
-                                    <SelectItem
-                                      value={language.value}
-                                      key={language.value}
-                                    >
-                                      {language.label}
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </FormItem>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-6">
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="description"
-                            className="min-h-20"
-                            onChangeCapture={(e) =>
-                              setDescription(e.currentTarget.value)
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    </div>
-                    {(notificationType === "email" ||
-                      notificationType === "sms") && (
-                      <div className="grid gap-6">
-                        <Card x-chunk="dashboard-07-chunk-1">
-                          <CardHeader>
-                            <CardTitle>Variables</CardTitle>
-                            <CardDescription>
-                              Enter variable name and press enter
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[100px]">
-                                    CODE
-                                  </TableHead>
-                                  <TableHead className="w-[100px]">
-                                    Validation
-                                  </TableHead>
-                                  <TableHead className="w-[100px]"></TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {variables.map((variable, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell>
-                                      <Input
-                                        id={`code-${index}`}
-                                        value={variable.code}
-                                        onChange={(e) => {
-                                          const inputValue =
-                                            e.target.value.toUpperCase();
-                                          if (isValidName(inputValue)) {
-                                            handleInputChange(
-                                              index,
-                                              "code",
-                                              inputValue
-                                            );
-                                          }
-                                        }}
-                                        placeholder="Enter code"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Input
-                                        id={`validation-${index}`}
-                                        value={variable.validation}
-                                        onChange={(e) =>
-                                          handleInputChange(
-                                            index,
-                                            "validation",
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="Enter validation"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <ToggleGroup
-                                        type="single"
-                                        defaultValue="m"
-                                        variant="outline"
+                                <SelectTrigger
+                                  id="providerName"
+                                  aria-label="Select Provider Name"
+                                >
+                                  <SelectValue placeholder="Default" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="null">Default</SelectItem>
+                                  {providersResp?.map((provider) => {
+                                    return (
+                                      <SelectItem
+                                        value={provider.name}
+                                        key={provider.id}
                                       >
-                                        <ToggleGroupItem
-                                          value="s"
-                                          onClick={() => {
-                                            handleCopyClick(variable.code);
-                                          }}
-                                        >
-                                          <span className="sr-only">Copy</span>
-                                          <CopyIcon className="h-4 w-4" />
-                                        </ToggleGroupItem>
-                                        <ToggleGroupItem
-                                          onClick={() => removeRow(index)}
-                                          value=""
-                                        >
-                                          <span className="sr-only">
-                                            Delete
-                                          </span>
-                                          <Trash2 className="h-4 w-4" />
-                                        </ToggleGroupItem>
-                                      </ToggleGroup>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </CardContent>
-                          <CardFooter className="justify-center border-t p-4">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="gap-1"
-                              onClick={addVariant}
-                            >
-                              <PlusCircle className="h-3.5 w-3.5" />
-                              Add Variant
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      </div>
-                    )}
+                                        {provider.name}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        </div>
 
-                    {notificationType === "email" && (
+                        <div className="grid gap-3">
+                          <FormItem>
+                            <FormLabel>This event is editable</FormLabel>
+                            <div className="flex items-center">
+                              <Switch
+                                id="terms"
+                                checked={isChecked}
+                                onClick={() => {
+                                  setIsChecked(!isChecked);
+                                  setEditable(!editable);
+                                }}
+                                className="mr-2"
+                              />
+                            </div>
+                          </FormItem>
+                        </div>
+
+                        <div className="grid gap-3">
+                          <FormItem>
+                            <FormLabel>Language</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={setLanguage}>
+                                <SelectTrigger
+                                  id="language"
+                                  aria-label="Select language"
+                                >
+                                  <SelectValue placeholder="Select Language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Languages_list?.map((language) => {
+                                    return (
+                                      <SelectItem
+                                        value={language.value}
+                                        key={language.value}
+                                      >
+                                        {language.label}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        </div>
+                      </div>
+
                       <div className="grid gap-6">
                         <FormItem>
-                          <FormLabel>Subject</FormLabel>
+                          <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <Input
-                              id="name"
-                              type="text"
-                              className="w-full"
+                            <Textarea
+                              id="description"
+                              className="min-h-20"
                               onChangeCapture={(e) =>
-                                setSubject(e.currentTarget.value)
+                                setDescription(e.currentTarget.value)
                               }
                             />
                           </FormControl>
                         </FormItem>
                       </div>
+                      {(notificationType === "email" ||
+                        notificationType === "sms") && (
+                        <div className="grid gap-6">
+                          <Card x-chunk="dashboard-07-chunk-1">
+                            <CardHeader>
+                              <CardTitle>Variables</CardTitle>
+                              <CardDescription>
+                                Enter variable name and press enter
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-[100px]">
+                                      CODE
+                                    </TableHead>
+                                    <TableHead className="w-[100px]">
+                                      Validation
+                                    </TableHead>
+                                    <TableHead className="w-[100px]"></TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {variables.map((variable, index) => (
+                                    <TableRow key={index}>
+                                      <TableCell>
+                                        <Input
+                                          id={`code-${index}`}
+                                          value={variable.code}
+                                          onChange={(e) => {
+                                            const inputValue =
+                                              e.target.value.toUpperCase();
+                                            if (isValidName(inputValue)) {
+                                              handleInputChange(
+                                                index,
+                                                "code",
+                                                inputValue
+                                              );
+                                            }
+                                          }}
+                                          placeholder="Enter code"
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Input
+                                          id={`validation-${index}`}
+                                          value={variable.validation}
+                                          onChange={(e) =>
+                                            handleInputChange(
+                                              index,
+                                              "validation",
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="Enter validation"
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <ToggleGroup
+                                          type="single"
+                                          defaultValue="m"
+                                          variant="outline"
+                                        >
+                                          <ToggleGroupItem
+                                            value="s"
+                                            onClick={() => {
+                                              handleCopyClick(variable.code);
+                                            }}
+                                          >
+                                            <span className="sr-only">
+                                              Copy
+                                            </span>
+                                            <CopyIcon className="h-4 w-4" />
+                                          </ToggleGroupItem>
+                                          <ToggleGroupItem
+                                            onClick={() => removeRow(index)}
+                                            value=""
+                                          >
+                                            <span className="sr-only">
+                                              Delete
+                                            </span>
+                                            <Trash2 className="h-4 w-4" />
+                                          </ToggleGroupItem>
+                                        </ToggleGroup>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </CardContent>
+                            <CardFooter className="justify-center border-t p-4">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1"
+                                onClick={addVariant}
+                              >
+                                <PlusCircle className="h-3.5 w-3.5" />
+                                Add Variant
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        </div>
+                      )}
+
+                      {notificationType === "email" && (
+                        <div className="grid gap-6">
+                          <FormItem>
+                            <FormLabel>Subject</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="name"
+                                type="text"
+                                className="w-full"
+                                onChangeCapture={(e) =>
+                                  setSubject(e.currentTarget.value)
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        </div>
+                      )}
+                    </div>
+
+                    {notificationType === "email" && (
+                      <div className="grid gap-6">
+                        <FormItem>
+                          <FormLabel>Email Body</FormLabel>
+                          <FormControl>
+                            <EmailTemplate ref={emailEditorRef} />
+                          </FormControl>
+                        </FormItem>
+                      </div>
                     )}
-                  </div>
 
-                  {notificationType === "email" && (
-                    <div className="grid gap-6">
-                      <FormItem>
-                        <FormLabel>Email Body</FormLabel>
-                        <FormControl>
-                          <EmailTemplate ref={emailEditorRef} />
-                        </FormControl>
-                      </FormItem>
-                    </div>
-                  )}
+                    {notificationType === "sms" && (
+                      <div className="grid gap-6">
+                        <FormItem>
+                          <FormLabel>SMS Body</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              onChangeCapture={(e) =>
+                                setSmsBody(e.currentTarget.value)
+                              }
+                              rows={2}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      </div>
+                    )}
 
-                  {notificationType === "sms" && (
-                    <div className="grid gap-6">
-                      <FormItem>
-                        <FormLabel>SMS Body</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            onChangeCapture={(e) =>
-                              setSmsBody(e.currentTarget.value)
-                            }
-                            rows={2}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    </div>
-                  )}
-
-                  {/* <DialogClose asChild> */}
-                  <DialogFooter>
-                    <form
-                      onSubmit={form.handleSubmit(onFinish)}
-                      className="space-y-8"
-                    >
-                      <Button type="submit">
-                        {IsEdit ? "Update" : "Create"}
-                      </Button>
-                    </form>
-                  </DialogFooter>
-                  {/* </DialogClose> */}
-                </CardContent>
-              </Form>
-
-              {/* </ScrollArea> */}
+                    {/* <DialogClose asChild> */}
+                    <DialogFooter>
+                      <form
+                        onSubmit={form.handleSubmit(onFinish)}
+                        className="space-y-8"
+                      >
+                        <Button type="submit">
+                          {IsEdit ? "Update" : "Create"}
+                        </Button>
+                      </form>
+                    </DialogFooter>
+                    {/* </DialogClose> */}
+                  </CardContent>
+                </Form>
+              </ScrollArea>
             </Card>
           </div>
         </DialogContent>

@@ -4,13 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { TemplateEmailList } from "./TemplateEmailList";
 import { TemplateSmsList } from "./TemplateSmsList";
 import TemplateService from "@/services/TemplateService";
+import { useSession } from "next-auth/react";
 
 export default function EventList() {
+
+  const { data: session, status } = useSession();
+
   useEffect(() => {
     // window is accessible here.
-    console.log("window.innerHeight", window.innerHeight);
+    // console.log("window.innerHeight", window.innerHeight);
   }, []);
-  const eventService = new TemplateService();
+  const eventService = new TemplateService(session?.user?.access_token || "");
 
   const { data: emailTemplatesResp } = useQuery(["getAllEmailTemplates"], () =>
     eventService.getAllEmailTemplates()
