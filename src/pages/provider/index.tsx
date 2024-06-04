@@ -1,7 +1,9 @@
-import React, { ReactElement, useEffect } from "react";
-import Layout from "@/components/layouts/Layout";
+import React, {  ReactNode, useEffect } from "react";
+import RootLayout from "@/components/layouts/Layout";
 import ProviderList from "@/components/provider/ProviderList";
 import ProviderCreate from "@/components/provider/ProviderCreate";
+import { getSession } from "next-auth/react";
+import { GetServerSidePropsContext } from "next";
 
 const Provider = ({}) => {
   useEffect(() => {
@@ -26,8 +28,25 @@ const Provider = ({}) => {
   );
 };
 
-Provider.getLayout = function getLayout(page: ReactElement) {
-  return <Layout>{page}</Layout>;
+Provider.pageOptions = {
+  requiresAuth: true,
+  getLayout: (children: ReactNode) => <RootLayout>{children}</RootLayout>,
 };
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/auth/login",
+        permanent: false,
+      },
+    };
+  }
+  return {
+    props: {},
+  };
+}
 
 export default Provider;

@@ -1,30 +1,79 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import type { ReactElement, ReactNode } from "react";
-import type { NextPage } from "next";
+import {
+  PropsWithChildren,
+  useEffect,
+  type ReactNode,
+} from "react";
 import HeadWrapper from "@/components/HeadWrapper";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
+import SiteLayout from "@/components/layouts/siteLayout";
+import Spinner from "@/components/spinner";
+import RouteChangeIndicator from "@/components/RouteChangeIndicator";
+import { SessionProvider, useSession } from "next-auth/react";
 
-export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
-  getLayout?: (page: ReactElement) => ReactNode;
-};
+function getDefaultLayout(children: ReactNode): ReactNode {
+  return <SiteLayout>{children}</SiteLayout>;
+}
 
-type AppPropsWithLayout = AppProps & {
-  Component: NextPageWithLayout;
-};
+export default function App(props: AppProps | any) {
+  const {
+    Component,
+    pageProps: { session, ...pageProps },
+  } = props;
 
-const queryClient = new QueryClient();
+  const queryClient = new QueryClient();
 
-export default function App({ Component, pageProps }: AppPropsWithLayout) {
-  const getLayout = Component.getLayout ?? ((page) => page);
+  const renderAppLayout = () => {
+    const children = <Component {...pageProps} />;
+    const { getLayout = getDefaultLayout } = Component.pageOptions || {};
 
-  return getLayout(
+    return getLayout(children);
+  };
+
+  if (session === "loading") return <Spinner.FullPage />;
+
+  return (
     <QueryClientProvider client={queryClient}>
       <HeadWrapper>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <Component {...pageProps} />
+        <SessionProvider session={session}>
+          <AuthManager {...props}>
+            {renderAppLayout()}
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AuthManager>
+          <RouteChangeIndicator />
+        </SessionProvider>
       </HeadWrapper>
     </QueryClientProvider>
   );
+}
+
+function AuthManager({ Component, children, router }: PropsWithChildren<any>) {
+  const { data: session, status }: any = useSession();
+  const { redirectIfAuthenticated = false, requiresAuth = false } =
+    Component.pageOptions || {};
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (requiresAuth && !session) {
+      router.replace(
+        `/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`
+      );
+      return;
+    }
+
+    if (!!session && redirectIfAuthenticated) {
+      router.replace("/");
+    }
+  }, [status, redirectIfAuthenticated, requiresAuth, router, session]);
+
+  if (
+    status === "loading" ||
+    (requiresAuth && !session) ||
+    (!!session && redirectIfAuthenticated)
+  ) {
+    return <Spinner.FullPage />;
+  }
+  return <>{children}</>;
 }

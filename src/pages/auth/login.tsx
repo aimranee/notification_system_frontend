@@ -1,101 +1,125 @@
 import Spinner from "@/components/spinner";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const LoginPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const form = useForm();
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("submit");
+  const onSubmit = async (values: unknown) => {
     const data = {
-      redirect: true,
+      redirect: false,
       username,
       password,
     };
 
-    const { error, ok }: any = await signIn("credentials", data);
-
-    if (!error && ok) {
-      console.log("login success");
-      // router.push('/');
-    } else {
-      // toast.error(error);
+    try {
+      const response = await signIn("credentials", data);
+      if (response?.error) {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong.",
+          description: `Login Error: ${response.error}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      } else {
+        toast({ description: "Login success, redirecting..." });
+        router.push("/");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong.",
+        description: `An unexpected error occurred: ${error}`,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
     }
   };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === "username") {
-      setUsername(value);
-    } else if (name === "password") {
-      setPassword(value);
-    }
-  };
-
-  // const eventHero = useQuery(['eventHero'], () =>
-  //   authServices.getAllBlogPosts()
-  // );
 
   if (status === "loading") return <Spinner.FullPage />;
 
   return (
     <div>
-      <section className="h-screen">
-        <div className="px-6 h-full text-gray-800">
-          <div className="flex gap-3 text-xl whitespace-nowrap mt-4 ml-4">
-            <div className="transform -rotate-45 relative bottom-2">
-              {/* <SendOutlined /> */}
-            </div>
-            <div className="font-semibold">Envoyer</div>
-          </div>
-          <div className="flex xl:justify-center lg:justify-between justify-center items-center flex-wrap h-full g-6">
-            <div className="grow-0 shrink-1 md:shrink-0 basis-auto xl:w-6/12 lg:w-6/12 md:w-9/12 mb-12 md:mb-0">
-              <img
-                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
-                className="w-full"
-                alt="Sample image"
-              />
-            </div>
-            <div className="xl:ml-20 xl:w-4/12 lg:w-5/12 md:w-8/12 mb-12 md:mb-0">
-              <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                  <input
-                    type="text"
-                    name="username"
-                    className="form-control block w-full px-4 py-2 text-xl font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                    placeholder="Username"
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <input
-                    type="password"
-                    name="password"
-                    className="form-control block w-full px-4 py-2 text-xl font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                    placeholder="Password"
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="text-center lg:text-left">
-                  <button
-                    type="submit"
-                    className="inline-block px-7 py-3 bg-blue-600 text-white font-medium text-sm leading-snug uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
-                  >
+      <Form {...form}>
+        <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
+          <div className="flex items-center justify-center py-12">
+            <div className="mx-auto grid w-[350px] gap-6">
+              <div className="grid gap-2 text-center">
+                <h1 className="text-3xl font-bold">Login</h1>
+                <p className="text-balance text-muted-foreground">
+                  Enter your email below to login to your account
+                </p>
+              </div>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                <div className="grid gap-4">
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="email">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="username"
+                          type="username"
+                          onChange={(e) => setUsername(e.target.value)}
+                          required
+                        />
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <div className="flex items-center">
+                        <FormLabel htmlFor="password">Password</FormLabel>
+                        <Link
+                          href="#"
+                          className="ml-auto inline-block text-sm underline"
+                        >
+                          Forgot your password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="password"
+                          type="password"
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                  <Button type="submit" className="w-full">
                     Login
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
           </div>
+          <div className="hidden bg-muted lg:block">
+            {/* <Image
+            src="/placeholder.svg"
+            alt="Image"
+            width="1920"
+            height="1080"
+            className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          /> */}
+          </div>
         </div>
-      </section>
+      </Form>
     </div>
   );
 };

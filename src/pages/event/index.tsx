@@ -1,11 +1,13 @@
-import React, { Fragment, ReactElement } from "react";
-import Layout from "@/components/layouts/Layout";
+import React, { Fragment, ReactNode } from "react";
+import RootLayout from "@/components/layouts/Layout";
 import EventList from "@/components/event/EventList";
 import EventCreate from "@/components/event/EventCreate";
+import { GetServerSidePropsContext } from "next";
+import { getSession } from "next-auth/react";
 
 const Event = () => {
   return (
-    <Fragment>
+    <>
       <div className="text-right">
         <EventCreate />
       </div>
@@ -20,12 +22,29 @@ const Event = () => {
           </div>
         </div>
       </div>
-    </Fragment>
+    </>
   );
 };
 
-Event.getLayout = function getLayout(page: ReactElement) {
-  return <Layout>{page}</Layout>;
+Event.pageOptions = {
+  requiresAuth: true,
+  getLayout: (children: ReactNode) => <RootLayout>{children}</RootLayout>,
 };
+
+// export async function getServerSideProps(context: GetServerSidePropsContext) {
+//   const session = await getSession(context);
+
+//   if (!session) {
+//     return {
+//       redirect: {
+//         destination: "/auth/login",
+//         permanent: false,
+//       },
+//     };
+//   }
+//   return {
+//     props: {},
+//   };
+// }
 
 export default Event;
