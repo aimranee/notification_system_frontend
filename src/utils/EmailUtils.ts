@@ -32,12 +32,9 @@ export function checkEmailVariablesExist(
 }
 
 export function assembleData(variables: Variable[]): string {
-  let assembledString = "";
-  variables.forEach((variable, index) => {
-    assembledString += `${variable.code}: ${variable.validation}`;
-    if (index !== variables.length - 1) {
-      assembledString += "; ";
-    }
-  });
-  return assembledString;
+  const assembledData = variables.map((variable) => ({
+    name: variable.code,
+    validation: variable.validation,
+  }));
+  return JSON.stringify(assembledData);
 }
