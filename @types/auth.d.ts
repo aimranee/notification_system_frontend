@@ -1,12 +1,11 @@
-// auth.d.ts
-type LoginInput = {
+import NextAuth, { User as DefaultUser } from "next-auth";
+
+export interface LoginInput {
   username: string;
   password: string;
-};
+}
 
-type RefreshTokenResponse = AuthResponse;
-
-type AuthResponse = {
+export interface AuthResponse extends DefaultUser {
   access_token: string;
   expires_in: number;
   refresh_expires_in: number;
@@ -15,4 +14,16 @@ type AuthResponse = {
   not_before_policy: number;
   session_state: string;
   scope: string;
-};
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
+  refresh_token: string;
+  token_type: string;
+  not_before_policy: number;
+  session_state: string;
+  scope: string;
+  status?: number;
+}
