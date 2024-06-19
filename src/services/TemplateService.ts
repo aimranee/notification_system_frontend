@@ -7,12 +7,18 @@ class TemplateService {
     this.apiClient = new ApiClient(
       `${process.env.API_BASE_URL}/notification-service/api/event`
     );
-    this.apiClient.setToken(token);
+    if (token != "") this.apiClient.setToken(token);
   }
 
   async getAllEmailTemplates(): Promise<EventResponse[]> {
     return this.apiClient
       .get("/findAllEmail")
+      .then((response) => response.data);
+  }
+
+  async getAllEventNames(): Promise<EventsNameResponse[]> {
+    return this.apiClient
+      .get("/findAllEventNames")
       .then((response) => response.data);
   }
 

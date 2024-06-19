@@ -7,7 +7,6 @@ import TemplateService from "@/services/TemplateService";
 import { useSession } from "next-auth/react";
 
 export default function EventList() {
-
   const { data: session, status } = useSession();
 
   useEffect(() => {

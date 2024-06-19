@@ -33,6 +33,18 @@ export function Sidebar() {
               Dashboard
             </Link>
             <Link
+              href="/Applications"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+                selectedItem === "Template"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              } transition-all hover:text-primary`}
+              onClick={() => handleItemClick("Template")}
+            >
+              <Package className="h-12 w-4" />
+              Applications
+            </Link>
+            <Link
               href="/event"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                 selectedItem === "Template"

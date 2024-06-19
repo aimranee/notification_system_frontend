@@ -60,18 +60,25 @@ export const columns: ColumnDef<EventResponse>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "subject",
+    accessorKey: "eventName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Subject
+          Event Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
+    cell: ({ row }) => (
+      <div className="uppercase">{row.getValue("eventName")}</div>
+    ),
+  },
+  {
+    accessorKey: "subject",
+
     cell: ({ row }) => (
       <div className="lowercase">{row.getValue("subject")}</div>
     ),
@@ -91,11 +98,18 @@ export const columns: ColumnDef<EventResponse>[] = [
     ),
   },
   {
-    accessorKey: "eventName",
-    header: "Event Name",
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("eventName")}</div>
-    ),
+    accessorKey: "variables",
+    header: "Variables",
+    cell: ({ row }) => {
+      const variables = JSON.parse(row.getValue("variables"));
+      return (
+        <div className="uppercasecase">
+          {variables.map((variable, index) => (
+            <div key={index}>{variable.name}</div>
+          ))}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "emailProviderName",

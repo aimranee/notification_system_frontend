@@ -35,3 +35,10 @@ type EventResponse = {
   variables?: string;
   language?: string;
 };
+
+type EventsNameResponse = {
+  id: string;
+  eventName: string;
+  description: string;
+  editable: boolean;
+};

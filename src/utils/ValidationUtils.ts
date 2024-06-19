@@ -1,4 +1,3 @@
-import { useToast } from "@/components/ui/use-toast";
 
 export const isValidName = (name: string) => {
   let regexp = new RegExp("^[A-Z_]+$");
@@ -16,16 +15,10 @@ export const isValidRegex = (pattern: string): boolean => {
 };
 
 export const validateInputs = (variables: Variable[]) => {
-  const { toast } = useToast();
   let isValid = true;
   variables.forEach((variable, index) => {
     if (!isValidRegex(variable.validation)) {
       isValid = false;
-      toast({
-        variant: "destructive",
-        title: "Something went wrong.",
-        description: `Invalid regex pattern for variable ${variable.code}`,
-      });
     }
   });
   return isValid;

@@ -51,6 +51,7 @@ import { CopyIcon } from "@radix-ui/react-icons";
 import TemplateService from "@/services/TemplateService";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
+import EmailEditor from "react-email-editor";
 import {
   assembleData,
   checkEmailVariablesExist,
@@ -62,6 +63,7 @@ import { validateInputs, isValidName } from "@/utils/ValidationUtils";
 import { copyToClipboard } from "@/utils/CopyToClipboard";
 import { useSession } from "next-auth/react";
 import EmailTemplate from "../emailTemplate";
+import { template } from "@/config/template";
 
 export default function EventCreate({
   IsEdit = false,
@@ -85,17 +87,21 @@ export default function EventCreate({
   const [providerName, setProviderName] = useState("");
   const [notificationType, setNotificationType] = useState("");
   const [smsBody, setSmsBody] = useState("");
+  const [language, setLanguage] = useState("en");
   const queryClient = useQueryClient();
   const emailEditorRef = useRef<any>(null);
   const [notifTypeCheck, setNotifTypeCheck] = useState(true);
-  const [language, setLanguage] = useState("en");
+
   const form = useForm();
   const [variables, setVariables] = useState([{ code: "", validation: "" }]);
   const { toast } = useToast();
-
+  const [isShowEmailEditor, setIsShowEmailEditor] = useState(false);
   const { data: providersResp } = useQuery(["getAllProviders"], () =>
     providerService.getAllEmailProviders()
   );
+
+  const regexCode: RegExp =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
 
   const { mutate: createEvent } = useMutation(
     (data: CreateEvent) => eventService.createEvent(data),
@@ -108,14 +114,30 @@ export default function EventCreate({
         setDescription("");
         setNotificationType("");
         setLanguage("en");
-        setVariables([{ code: "", validation: "" }]);
+        setVariables([
+          { code: "PREFERENCES_LINK", validation: regexCode.source },
+        ]);
         await queryClient.invalidateQueries(["getAllEvents"]);
       },
       onSettled: async () => {},
     }
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    setTimeout(() => {
+      setIsShowEmailEditor(true);
+    });
+    setVariables([{ code: "PREFERENCES_LINK", validation: regexCode.source }]);
+    emailEditorRef?.current?.editor?.loadDesign(template);
+  }, []);
+
+  const onLoad = () => {
+    emailEditorRef.current?.editor?.loadDesign(template);
+  };
+
+  const onReady = () => {
+    emailEditorRef.current?.editor?.loadDesign(template);
+  };
 
   const selectedProvider = providersResp?.find(
     (provider) => provider.name === providerName
@@ -184,7 +206,6 @@ export default function EventCreate({
             description: `Error: ${missingVariables?.join(
               ", "
             )} do not exist in variables list`,
-            action: <ToastAction altText="Try again">Try again</ToastAction>,
           });
           return;
         }
@@ -194,13 +215,15 @@ export default function EventCreate({
             title: "Something went wrong.",
             description:
               "One or more variables do not exist in the template or SMS body.",
-            action: <ToastAction altText="Try again">Try again</ToastAction>,
           });
           return;
         }
         if (!validateInputs(variables)) {
-          // Abort submission if any input is invalid
-
+          toast({
+            variant: "destructive",
+            title: "Something went wrong.",
+            description: `Invalid regex pattern for variables`,
+          });
           return;
         }
       });
@@ -239,9 +262,7 @@ export default function EventCreate({
               <ScrollArea className="h-400 w-800 rounded-md border">
                 <CardHeader>
                   <CardTitle>Template Details</CardTitle>
-                  <CardDescription>
-                    {/* Lipsum dolor sit amet, consectetur adipiscing elit */}
-                  </CardDescription>
+                  <CardDescription></CardDescription>
                 </CardHeader>
                 <Form {...form}>
                   <CardContent>
@@ -414,36 +435,52 @@ export default function EventCreate({
                                   {variables.map((variable, index) => (
                                     <TableRow key={index}>
                                       <TableCell>
-                                        <Input
-                                          id={`code-${index}`}
-                                          value={variable.code}
-                                          onChange={(e) => {
-                                            const inputValue =
-                                              e.target.value.toUpperCase();
-                                            if (isValidName(inputValue)) {
-                                              handleInputChange(
-                                                index,
-                                                "code",
-                                                inputValue
-                                              );
-                                            }
-                                          }}
-                                          placeholder="Enter code"
-                                        />
+                                        {variable.code == "PREFERENCES_LINK" ? (
+                                          <Input
+                                            id={`code-${index}`}
+                                            value={variable.code}
+                                            disabled
+                                          />
+                                        ) : (
+                                          <Input
+                                            id={`code-${index}`}
+                                            value={variable.code}
+                                            onChange={(e) => {
+                                              const inputValue =
+                                                e.target.value.toUpperCase();
+                                              if (isValidName(inputValue)) {
+                                                handleInputChange(
+                                                  index,
+                                                  "code",
+                                                  inputValue
+                                                );
+                                              }
+                                            }}
+                                            placeholder="Enter code"
+                                          />
+                                        )}
                                       </TableCell>
                                       <TableCell>
-                                        <Input
-                                          id={`validation-${index}`}
-                                          value={variable.validation}
-                                          onChange={(e) =>
-                                            handleInputChange(
-                                              index,
-                                              "validation",
-                                              e.target.value
-                                            )
-                                          }
-                                          placeholder="Enter validation"
-                                        />
+                                        {variable.code == "PREFERENCES_LINK" ? (
+                                          <Input
+                                            id={`validation-${index}`}
+                                            value={variable.validation}
+                                            disabled
+                                          />
+                                        ) : (
+                                          <Input
+                                            id={`validation-${index}`}
+                                            value={variable.validation}
+                                            onChange={(e) =>
+                                              handleInputChange(
+                                                index,
+                                                "validation",
+                                                e.target.value
+                                              )
+                                            }
+                                            placeholder="Enter validation"
+                                          />
+                                        )}
                                       </TableCell>
                                       <TableCell>
                                         <ToggleGroup
@@ -517,7 +554,18 @@ export default function EventCreate({
                         <FormItem>
                           <FormLabel>Email Body</FormLabel>
                           <FormControl>
-                            <EmailTemplate ref={emailEditorRef} />
+                            {isShowEmailEditor ? (
+                              <EmailEditor
+                                ref={emailEditorRef}
+                                onLoad={onLoad}
+                                onReady={onReady}
+                                projectId={138679}
+                              />
+                            ) : (
+                              <div className="h-[500px] flex justify-center items-center">
+                                {/* <Spin size="large" /> */}
+                              </div>
+                            )}
                           </FormControl>
                         </FormItem>
                       </div>
