@@ -4,6 +4,11 @@ export const isValidName = (name: string) => {
   return regexp.test(name);
 };
 
+export const isValidClientId = (clientId: string) => {
+  let regexp = new RegExp("(?!$)(?:[a-z0-9]*)$");
+  return regexp.test(clientId);
+};
+
 export const isValidRegex = (pattern: string): boolean => {
   try {
     const newPatter = `/${pattern}/`;

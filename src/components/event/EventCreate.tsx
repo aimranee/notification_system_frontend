@@ -114,10 +114,12 @@ export default function EventCreate({
         setDescription("");
         setNotificationType("");
         setLanguage("en");
+        setDescription("");
+        setSubject("");
         setVariables([
           { code: "PREFERENCES_LINK", validation: regexCode.source },
         ]);
-        await queryClient.invalidateQueries(["getAllEvents"]);
+        await Promise.all([queryClient.invalidateQueries(["getAllEvents"])]);
       },
       onSettled: async () => {},
     }
@@ -152,19 +154,49 @@ export default function EventCreate({
     design?: string;
     assembledData?: string;
   }) => {
-    createEvent({
-      eventName: eventName,
-      editable: editable,
-      notificationType: notificationType,
-      emailProvider: selectedProvider as EmailProviderResponse,
-      description: description,
-      message: smsBody,
-      subject: subject,
-      emailRenderedHtml: html,
-      emailMarkup: JSON.stringify(design),
-      language: language,
-      variables: assembledData,
-    });
+    createEvent(
+      {
+        eventName: eventName,
+        editable: editable,
+        notificationType: notificationType,
+        emailProvider: selectedProvider as EmailProviderResponse,
+        description: description,
+        message: smsBody,
+        subject: subject,
+        emailRenderedHtml: html,
+        emailMarkup: JSON.stringify(design),
+        language: language,
+        variables: assembledData,
+      },
+      {
+        onError: (err: any) => {
+          toast(
+            err?.message
+              ? err?.message
+              : {
+                  variant: "destructive",
+                  title: "Something went wrong.",
+                  description: "Error creating provider",
+                }
+          );
+        },
+        onSuccess: async () => {
+          toast({ description: "Event created successfully" });
+          setEditable(false);
+          setIsChecked(false);
+          setEventName("");
+          setDescription("");
+          setNotificationType("");
+          setLanguage("en");
+          setDescription("");
+          setSubject("");
+          setVariables([
+            { code: "PREFERENCES_LINK", validation: regexCode.source },
+          ]);
+          await Promise.all([queryClient.invalidateQueries(["getAllEvents"])]);
+        },
+      }
+    );
   };
 
   const addVariant = () => {
@@ -207,7 +239,6 @@ export default function EventCreate({
               ", "
             )} do not exist in variables list`,
           });
-          return;
         }
         if (!isVariablesExist) {
           toast({
@@ -216,7 +247,6 @@ export default function EventCreate({
             description:
               "One or more variables do not exist in the template or SMS body.",
           });
-          return;
         }
         if (!validateInputs(variables)) {
           toast({
@@ -224,13 +254,9 @@ export default function EventCreate({
             title: "Something went wrong.",
             description: `Invalid regex pattern for variables`,
           });
-          return;
         }
       });
-      return;
     }
-
-    createEventFunc({});
   };
 
   const handleCopyClick = (code: string) => {

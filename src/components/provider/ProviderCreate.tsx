@@ -172,15 +172,15 @@ export default function ProviderCreate({
         },
         {
           onError: (err: any) => {
-            // toast(
-            //   err?.message
-            //     ? err?.message
-            //     : {
-            //         variant: "destructive",
-            //         title: "Something went wrong.",
-            //         description: "Error creating provider",
-            //       }
-            // );
+            toast(
+              err?.message
+                ? err?.message
+                : {
+                    variant: "destructive",
+                    title: "Something went wrong.",
+                    description: "Error creating provider",
+                  }
+            );
           },
           onSuccess: async () => {
             await Promise.all([
@@ -188,17 +188,17 @@ export default function ProviderCreate({
               queryClient.invalidateQueries(["getAllSmsProviders"]),
               queryClient.invalidateQueries(["getAllEmailProviders"]),
             ]);
-            // toast({ description: "Provider created successfully" });
+            toast({ description: "Provider created successfully" });
             clearForm();
           },
         }
       );
     } else {
-      // toast({
-      //   variant: "destructive",
-      //   title: "Something went wrong.",
-      //   description: "Select Provider type",
-      // });
+      toast({
+        variant: "destructive",
+        title: "Something went wrong.",
+        description: "Select Provider type",
+      });
       return;
     }
 
@@ -291,7 +291,7 @@ export default function ProviderCreate({
               Edit
             </Button>
           ) : (
-            <Button className="mt-4">Create Event</Button>
+            <Button className="mt-4">Create Provider</Button>
           )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-[525px]">

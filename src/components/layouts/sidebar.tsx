@@ -33,7 +33,7 @@ export function Sidebar() {
               Dashboard
             </Link>
             <Link
-              href="/Applications"
+              href="/application"
               className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                 selectedItem === "Template"
                   ? "text-primary"

@@ -155,7 +155,7 @@ export function TemplateEmailList({
   const [listData, setListData] = useState(allTemplatesResp || []);
 
   useEffect(() => {
-    console.log("useEffect : = " + allTemplatesResp);
+    // console.log("useEffect : = " + allTemplatesResp);
     setListData(allTemplatesResp || []);
   }, [allTemplatesResp]);
 
@@ -179,7 +179,7 @@ export function TemplateEmailList({
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter templates..."
