@@ -2,19 +2,18 @@ import Spinner from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { getSession, signIn, signOut, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
-import Image from "next/image";
 
 const AdminLoginForm = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const appId = router.query?.["app-id"];
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const form = useForm();
@@ -38,7 +37,7 @@ const AdminLoginForm = () => {
         });
       } else {
         toast({ description: "Login success, redirecting..." });
-        router.push("/");
+        // router.push("/dashboard/" + appId);
       }
     } catch (error) {
       toast({

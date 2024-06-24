@@ -19,10 +19,13 @@ class AuthService {
   }
 
   async authenticate(loginInput: LoginInput): Promise<AuthResponse> {
-    const response = await axios.post("http://localhost:8888/login", {
-      username: loginInput?.username,
-      password: loginInput?.password,
-    });
+    const response = await axios.post(
+      "http://localhost:8888/keycloak-management-service/keycloak/login/admin",
+      {
+        username: loginInput?.username,
+        password: loginInput?.password,
+      }
+    );
     if (response.data.access_token) {
       this.apiClient.setToken(response.data.access_token);
     }
@@ -33,7 +36,7 @@ class AuthService {
     loginInput: ClientCredentials
   ): Promise<ClientCredentialsResponse> {
     const response = await axios.post(
-      "http://localhost:8888/keycloak-management-service/keycloak/login",
+      "http://localhost:8888/keycloak-management-service/keycloak/login/client",
       {
         clientId: loginInput?.clientId,
         clientSecret: loginInput?.clientSecret,

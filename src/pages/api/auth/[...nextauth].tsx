@@ -76,11 +76,19 @@ export default NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.access_token = user.access_token;
+        token.scope = user.scope;
+        token.expires_in = user.expires_in;
+        token.client_app_id = user.client_app_id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.access_token = token.access_token as string;
+      session.user.scope = token.scope as string;
+      session.user.expires_in = token.expires_in as number;
+      session.user.client_app_id = token.client_app_id as string;
+      session.user.role = token.role as string;
       return session;
     },
   },

@@ -14,8 +14,12 @@ import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientLoginForm } from "@/components/auth/clientLoginForm";
 import AdminLoginForm from "@/components/auth/adminLoginForm";
+import { USER_ROLE } from "@/utils/Constants";
 
 const LoginPage = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const tabs = [
     {
       label: "Admin",
@@ -69,6 +73,8 @@ LoginPage.pageOptions = {
 
 export async function getServerSideProps(context: any) {
   const session = await getSession(context);
+  const isAdmin = session?.user.role === USER_ROLE.ADMIN;
+  const appId = session?.user.client_app_id;
 
   if (!session) {
     return {
@@ -77,7 +83,7 @@ export async function getServerSideProps(context: any) {
   } else {
     return {
       redirect: {
-        destination: `/`,
+        destination: isAdmin ? "/admin" : `/dashboard/${appId}`,
         permanent: true,
       },
     };

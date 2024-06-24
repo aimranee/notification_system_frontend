@@ -1,10 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import {
-  PropsWithChildren,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { PropsWithChildren, useEffect, type ReactNode } from "react";
 import HeadWrapper from "@/components/HeadWrapper";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
@@ -12,6 +8,7 @@ import SiteLayout from "@/components/layouts/siteLayout";
 import Spinner from "@/components/spinner";
 import RouteChangeIndicator from "@/components/RouteChangeIndicator";
 import { SessionProvider, useSession } from "next-auth/react";
+import { USER_ROLE } from "@/utils/Constants";
 
 function getDefaultLayout(children: ReactNode): ReactNode {
   return <SiteLayout>{children}</SiteLayout>;
@@ -64,7 +61,12 @@ function AuthManager({ Component, children, router }: PropsWithChildren<any>) {
     }
 
     if (!!session && redirectIfAuthenticated) {
-      router.replace("/");
+      let redirectUrl = "/dashboard/" + session?.user.client_app_id;
+      if (session?.user.role === USER_ROLE.ADMIN) {
+        redirectUrl = "/admin";
+      }
+
+      router.replace(redirectUrl);
     }
   }, [status, redirectIfAuthenticated, requiresAuth, router, session]);
 
