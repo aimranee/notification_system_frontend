@@ -9,6 +9,8 @@ declare module "next-auth" {
       refresh_token: string;
       session_state: string;
       scope: string;
+      client_app_id: string;
+      role: string;
     };
   }
 
@@ -19,5 +21,7 @@ declare module "next-auth" {
     refresh_token: string;
     session_state: string;
     scope: string;
+    client_app_id: string;
+    role: string;
   }
 }

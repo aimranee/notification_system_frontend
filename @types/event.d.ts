@@ -10,6 +10,7 @@ type CreateEvent = {
   emailProvider?: object;
   language?: string;
   variables?: string;
+  clientAppId?: string;
 };
 
 type UpdateEvent = CreateEvent & {
@@ -26,14 +27,15 @@ type EventResponse = {
   notificationType: string;
   CreatedDate: string;
   UpdatedDate: string;
-  description?: string;
-  message?: string;
-  subject?: string;
-  markup?: string;
-  emailRenderedHtml?: string;
+  description: string;
+  message: string;
+  subject: string;
+  markup: string;
+  emailRenderedHtml: string;
   emailProviderName: string;
-  variables?: string;
-  language?: string;
+  variables: string;
+  language: string;
+  clientAppId: string;
 };
 
 type EventsNameResponse = {
