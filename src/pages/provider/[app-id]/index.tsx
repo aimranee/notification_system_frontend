@@ -1,11 +1,15 @@
-import React, {  ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import RootLayout from "@/components/layouts/Layout";
 import ProviderList from "@/components/provider/ProviderList";
 import ProviderCreate from "@/components/provider/ProviderCreate";
-import { getSession } from "next-auth/react";
+import { getSession, GetSessionParams } from "next-auth/react";
 import { GetServerSidePropsContext } from "next";
+import { useRouter } from "next/router";
+import { USER_ROLE } from "@/utils/Constants";
 
 const Provider = ({}) => {
+  const router = useRouter();
+  const appId = router.query?.["app-id"];
   useEffect(() => {
     // window is accessible here.
     // console.log("window.innerHeight", window.innerHeight);
@@ -22,7 +26,7 @@ const Provider = ({}) => {
         className="flex flex-col rounded-lg border border-dashed shadow-sm p-4"
         x-chunk="dashboard-02-chunk-1"
       >
-        <ProviderList />
+        <ProviderList appId={String(appId)} />
       </div>
     </>
   );
@@ -33,7 +37,27 @@ Provider.pageOptions = {
   getLayout: (children: ReactNode) => <RootLayout>{children}</RootLayout>,
 };
 
-export async function getServerSideProps(context: GetServerSidePropsContext) {
+// export async function getServerSideProps(context: GetServerSidePropsContext) {
+//   const session = await getSession(context);
+
+//   if (
+//     session?.user.role === USER_ROLE.ADMIN ||
+//     session?.user.client_app_id === String(context.params?.["app-id"])
+//   ) {
+//     return {
+//       props: {},
+//     };
+//   } else {
+//     return {
+//       redirect: {
+//         destination: "/dashboard/" + session?.user.client_app_id,
+//         permanent: true,
+//       },
+//     };
+//   }
+// }
+
+export async function getServerSideProps(context: GetSessionParams) {
   const session = await getSession(context);
 
   if (!session) {
@@ -44,8 +68,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       },
     };
   }
+
   return {
-    props: {},
+    props: { session },
   };
 }
 

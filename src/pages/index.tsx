@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import RootLayout from "@/components/layouts/Layout";
 import { getSession, GetSessionParams } from "next-auth/react";
+import { GetServerSidePropsContext } from "next";
 
 export default function Home() {
-
   return (
     <>
       {/* <Dashboard /> */}
-      <div className="flex items-center">
+      {/* <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Dashboard</h1>
       </div>
       <div
@@ -19,7 +19,7 @@ export default function Home() {
             You have no data here yet
           </h3>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }
@@ -29,19 +29,15 @@ Home.pageOptions = {
   getLayout: (children: ReactNode) => <RootLayout>{children}</RootLayout>,
 };
 
-export async function getServerSideProps(context: GetSessionParams) {
-  const session = await getSession(context);
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  // const session = await getSession(context);
 
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/auth/login",
-        permanent: false,
-      },
-    };
-  }
-
+  // if (!session) {
   return {
-    props: { session },
+    redirect: {
+      destination: "/auth/login",
+      permanent: false,
+    },
   };
+  // }
 }

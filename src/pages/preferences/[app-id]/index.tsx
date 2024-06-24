@@ -26,6 +26,8 @@ export function Preferences({ className, ...props }: CardProps) {
   const [preferencesState, setPreferencesState] = useState<{
     [key: string]: boolean;
   }>({});
+  const router = useRouter();
+  const appId = router.query?.["app-id"];
   const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
   const {
@@ -34,7 +36,6 @@ export function Preferences({ className, ...props }: CardProps) {
     error: eventsError,
   } = useQuery(["getAllEventNames"], () => eventService.getAllEventNames());
 
-  const router = useRouter();
   const {
     data: preferenceToken,
     isLoading: tokenLoading,
