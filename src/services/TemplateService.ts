@@ -10,9 +10,9 @@ class TemplateService {
     if (token != "") this.apiClient.setToken(token);
   }
 
-  async getAllEmailTemplates(): Promise<EventResponse[]> {
+  async getAllEmailTemplates(appId: string): Promise<EventResponse[]> {
     return this.apiClient
-      .get("/findAllEmail")
+      .get("/findAllEmail/" + appId)
       .then((response) => response.data);
   }
 

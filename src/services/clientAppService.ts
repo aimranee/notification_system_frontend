@@ -21,9 +21,15 @@ class ClientAppService {
       });
   }
 
-  async getClientApp(name: string): Promise<ClientAppResponse[]> {
+  async getClientAppByName(name: string): Promise<ClientAppResponse> {
     return this.apiClient
       .get("/name/" + name)
+      .then((response) => response.data);
+  }
+
+  async getClientAppByKeycloak(appId: string): Promise<ClientAppResponse> {
+    return this.apiClient
+      .get("/find/clientKeycloakId/" + appId)
       .then((response) => response.data);
   }
 

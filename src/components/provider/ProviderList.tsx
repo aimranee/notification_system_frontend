@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { EmailProviderList } from "./EmailProviderList";
 import { useSession } from "next-auth/react";
 
-export default function ProviderList() {
+export default function ProviderList({ appId }: { appId: string }) {
   const { data: session, status } = useSession();
   const providerService = new ProviderService(
     session?.user?.access_token || ""

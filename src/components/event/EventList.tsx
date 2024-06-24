@@ -6,7 +6,7 @@ import { TemplateSmsList } from "./TemplateSmsList";
 import TemplateService from "@/services/TemplateService";
 import { useSession } from "next-auth/react";
 
-export default function EventList() {
+export default function EventList({ appId }: { appId: string }) {
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -16,11 +16,11 @@ export default function EventList() {
   const eventService = new TemplateService(session?.user?.access_token || "");
 
   const { data: emailTemplatesResp } = useQuery(["getAllEmailTemplates"], () =>
-    eventService.getAllEmailTemplates()
+    eventService.getAllEmailTemplates(appId)
   );
 
   const { data: smsTemplatesResp } = useQuery(["getAllSmsTemplates"], () =>
-    eventService.getAllEmailTemplates()
+    eventService.getAllEmailTemplates(appId)
   );
 
   const tabs = [

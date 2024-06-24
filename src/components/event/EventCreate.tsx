@@ -62,17 +62,17 @@ import { transformToVariable } from "@/utils/StringFormat";
 import { validateInputs, isValidName } from "@/utils/ValidationUtils";
 import { copyToClipboard } from "@/utils/CopyToClipboard";
 import { useSession } from "next-auth/react";
-import EmailTemplate from "../emailTemplate";
 import { template } from "@/config/template";
+
 
 export default function EventCreate({
   IsEdit = false,
-}: // EventDetails,
-// EventType,
-{
+  EventDetails,
+  appId,
+}: {
   IsEdit?: boolean;
-  // EventDetails?: EventResponse;
-  // EventType?: string;
+  EventDetails?: EventResponse;
+  appId?: string;
 }) {
   const { data: session, status } = useSession();
   const eventService = new TemplateService(session?.user?.access_token || "");
@@ -91,7 +91,6 @@ export default function EventCreate({
   const queryClient = useQueryClient();
   const emailEditorRef = useRef<any>(null);
   const [notifTypeCheck, setNotifTypeCheck] = useState(true);
-
   const form = useForm();
   const [variables, setVariables] = useState([{ code: "", validation: "" }]);
   const { toast } = useToast();
@@ -119,7 +118,9 @@ export default function EventCreate({
         setVariables([
           { code: "PREFERENCES_LINK", validation: regexCode.source },
         ]);
-        await Promise.all([queryClient.invalidateQueries(["getAllEvents"])]);
+        await Promise.all([
+          queryClient.invalidateQueries(["getAllEmailTemplates"]),
+        ]);
       },
       onSettled: async () => {},
     }
@@ -131,7 +132,21 @@ export default function EventCreate({
     });
     setVariables([{ code: "PREFERENCES_LINK", validation: regexCode.source }]);
     emailEditorRef?.current?.editor?.loadDesign(template);
-  }, []);
+    if (IsEdit && EventDetails != undefined) {
+      setEventName(EventDetails?.eventName);
+      setEditable(EventDetails.editable);
+      setDescription(EventDetails.description);
+      setProviderName(EventDetails.emailProviderName);
+      if (EventDetails.notificationType == "email") {
+        emailEditorRef?.current?.editor?.loadDesign(EventDetails.markup);
+        setSubject(EventDetails.subject);
+        const parsedVariables = JSON.parse(EventDetails.variables);
+        if (Array.isArray(parsedVariables)) {
+          setVariables(parsedVariables);
+        }
+      }
+    }
+  }, [IsEdit, EventDetails]);
 
   const onLoad = () => {
     emailEditorRef.current?.editor?.loadDesign(template);
@@ -141,9 +156,8 @@ export default function EventCreate({
     emailEditorRef.current?.editor?.loadDesign(template);
   };
 
-  const selectedProvider = providersResp?.find(
-    (provider) => provider.name === providerName
-  );
+  const selectedProvider =
+    providersResp?.find((provider) => provider.name === providerName) || null;
 
   const createEventFunc = ({
     design,
@@ -167,6 +181,7 @@ export default function EventCreate({
         emailMarkup: JSON.stringify(design),
         language: language,
         variables: assembledData,
+        clientAppId: appId?.toString(),
       },
       {
         onError: (err: any) => {
@@ -193,7 +208,9 @@ export default function EventCreate({
           setVariables([
             { code: "PREFERENCES_LINK", validation: regexCode.source },
           ]);
-          await Promise.all([queryClient.invalidateQueries(["getAllEvents"])]);
+          await Promise.all([
+            queryClient.invalidateQueries(["getAllEmailTemplates"]),
+          ]);
         },
       }
     );
@@ -349,6 +366,7 @@ export default function EventCreate({
                                 onValueChange={(value: any) => {
                                   setProviderName(value);
                                 }}
+                                value={providerName}
                               >
                                 <SelectTrigger
                                   id="providerName"

@@ -155,7 +155,7 @@ export const columns: ColumnDef<UrlshorteningResponse>[] = [
   },
 ];
 
-export function UrlshorteningList() {
+export function UrlshorteningList({ appId }: { appId: string }) {
   const current = new Date();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -169,7 +169,7 @@ export function UrlshorteningList() {
   );
 
   const { data: urlshorteningsResp } = useQuery(["getAll"], () =>
-    urlshorteningService.getAll()
+    urlshorteningService.getAll(appId)
   );
 
   useEffect(() => {
